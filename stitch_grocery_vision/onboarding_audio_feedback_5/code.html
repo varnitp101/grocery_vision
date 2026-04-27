@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Active Product Scanner</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ffbf00",
+                        "background-light": "#f0f0f0", 
+                        "background-dark": "#0a0a0a",
+                        "surface-dark": "#1a1a1a",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>*:focus-visible {
+            outline: 6px solid #ffbf00;
+            outline-offset: -2px;z-index: 50;
+        }
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;}
+        html {
+            height: 100%;
+        }@keyframes scan {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .scan-line {
+            animation: scan 2s linear infinite;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display flex flex-col h-full relative">
+<div aria-live="assertive" class="sr-only" role="status">
+        Camera active. Point your device at a product. Processing in progress. Cancel button is at the bottom of the screen.
+    </div>
+<div class="absolute inset-0 z-0 bg-gray-900 flex items-center justify-center overflow-hidden">
+<div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gray-700 via-gray-900 to-black"></div>
+<div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px); background-size: 40px 40px;"></div>
+</div>
+<header class="relative z-10 w-full pt-16 pb-8 bg-gradient-to-b from-black/90 to-transparent flex justify-center items-start pointer-events-none">
+<h1 class="text-4xl font-bold tracking-widest text-white drop-shadow-md text-center uppercase px-4 bg-black/40 backdrop-blur-md py-2 rounded-xl border border-white/10">
+            Point at Product
+        </h1>
+</header>
+<main class="relative z-0 flex-grow flex items-center justify-center pointer-events-none">
+<div class="relative w-72 h-72 border-none">
+<div class="absolute top-0 left-0 w-12 h-12 border-l-8 border-t-8 border-primary rounded-tl-lg shadow-[0_0_15px_rgba(255,191,0,0.5)]"></div>
+<div class="absolute top-0 right-0 w-12 h-12 border-r-8 border-t-8 border-primary rounded-tr-lg shadow-[0_0_15px_rgba(255,191,0,0.5)]"></div>
+<div class="absolute bottom-0 left-0 w-12 h-12 border-l-8 border-b-8 border-primary rounded-bl-lg shadow-[0_0_15px_rgba(255,191,0,0.5)]"></div>
+<div class="absolute bottom-0 right-0 w-12 h-12 border-r-8 border-b-8 border-primary rounded-br-lg shadow-[0_0_15px_rgba(255,191,0,0.5)]"></div>
+<div class="absolute left-0 right-0 h-1 bg-primary/80 shadow-[0_0_20px_#ffbf00] scan-line"></div>
+</div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="absolute w-32 h-32 bg-primary/20 rounded-full animate-ping"></div>
+<div class="absolute w-48 h-48 bg-primary/10 rounded-full animate-pulse delay-75"></div>
+<div class="relative bg-black/60 backdrop-blur-sm p-6 rounded-full border-2 border-primary/50 flex flex-col items-center justify-center shadow-2xl">
+<span class="material-icons-round text-5xl text-primary animate-pulse">
+                    smart_toy
+                </span>
+<span class="text-[10px] font-bold text-primary mt-1 tracking-widest uppercase">Scanning</span>
+</div>
+</div>
+</main>
+<footer class="relative z-20 flex-none pb-safe">
+<button aria-label="Cancel scanning and return to menu" class="w-full h-32 bg-primary hover:bg-[#e6ac00] active:bg-[#cc9900] text-black transition-colors flex items-center justify-center gap-4 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] relative group touch-manipulation" type="button">
+<div class="bg-black/10 p-3 rounded-full group-active:scale-95 transition-transform">
+<span class="material-icons-round text-5xl">close</span>
+</div>
+<span class="text-4xl font-black tracking-widest uppercase">
+                Cancel
+            </span>
+<div class="absolute top-0 left-0 right-0 h-2 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(0,0,0,0.1)_10px,rgba(0,0,0,0.1)_20px)]"></div>
+</button>
+</footer>
+
+</body></html>

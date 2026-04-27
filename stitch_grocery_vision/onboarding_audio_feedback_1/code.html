@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Modern Sign Up Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ffbf00",
+                        "background-dark": "#021220", 
+                        "surface-dark": "#0a253a",
+                        "surface-input": "#051828",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "3xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    *:focus-visible {
+        outline: 4px solid #ffbf00;
+        outline-offset: 4px;
+    }
+    body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    html, body {
+        height: 100%;
+        overflow: hidden; 
+    }
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark font-display text-white flex flex-col h-full selection:bg-primary selection:text-black">
+<div aria-live="polite" class="sr-only" role="status">
+    Sign Up Screen. Please enter your Name, Email, and Password. Double tap fields to edit. The Create Account button is located at the bottom of the screen.
+</div>
+<header class="flex-none px-6 pt-12 pb-4 flex justify-between items-center z-10 bg-background-dark">
+<button aria-label="Go Back to previous screen" class="p-3 -ml-3 rounded-full hover:bg-surface-dark transition-colors focus:ring-4 focus:ring-primary">
+<span class="material-icons-round text-4xl text-gray-400 group-hover:text-white">arrow_back</span>
+</button>
+<div class="flex items-center gap-2 opacity-90">
+<span class="material-icons-round text-primary animate-pulse">graphic_eq</span>
+<span class="text-sm font-bold tracking-widest uppercase text-gray-400">Voice Active</span>
+</div>
+</header>
+<main class="flex-grow flex flex-col px-6 py-4 overflow-y-auto no-scrollbar relative z-0">
+<div class="mb-8">
+<h1 class="text-5xl font-bold tracking-tight text-white mb-2">
+            Sign <span class="text-primary">Up</span>
+</h1>
+<p class="text-xl text-gray-400 font-medium leading-relaxed">
+            Create an account to personalize your assistant.
+        </p>
+</div>
+<form class="space-y-6 flex-grow flex flex-col justify-start" onsubmit="event.preventDefault()">
+<div class="bg-surface-dark rounded-3xl p-6 shadow-xl border border-white/5 space-y-6">
+<div class="group">
+<label class="block text-sm font-bold uppercase tracking-wider text-primary mb-2 ml-1 flex items-center gap-2" for="name">
+<span class="material-icons-round text-base">badge</span>
+                    Full Name
+                </label>
+<input aria-label="Full Name input" autocomplete="name" class="block w-full rounded-xl border-2 border-transparent bg-surface-input p-5 text-xl font-medium text-white placeholder-gray-500 focus:border-primary focus:ring-0 transition-all shadow-inner" id="name" name="name" placeholder="John Doe" type="text"/>
+</div>
+<div class="group">
+<label class="block text-sm font-bold uppercase tracking-wider text-primary mb-2 ml-1 flex items-center gap-2" for="email">
+<span class="material-icons-round text-base">email</span>
+                    Email
+                </label>
+<input aria-label="Email Address input" autocomplete="email" class="block w-full rounded-xl border-2 border-transparent bg-surface-input p-5 text-xl font-medium text-white placeholder-gray-500 focus:border-primary focus:ring-0 transition-all shadow-inner" id="email" name="email" placeholder="you@example.com" type="email"/>
+</div>
+<div class="group">
+<label class="block text-sm font-bold uppercase tracking-wider text-primary mb-2 ml-1 flex items-center gap-2" for="password">
+<span class="material-icons-round text-base">lock</span>
+                    Password
+                </label>
+<div class="relative">
+<input aria-label="Password input. Required." autocomplete="new-password" class="block w-full rounded-xl border-2 border-transparent bg-surface-input p-5 pr-16 text-xl font-medium text-white placeholder-gray-500 focus:border-primary focus:ring-0 transition-all shadow-inner" id="password" name="password" placeholder="••••••••" type="password"/>
+<div class="absolute inset-y-0 right-0 pr-4 flex items-center">
+<button aria-label="Toggle password visibility" class="p-3 text-gray-500 hover:text-white focus:text-primary rounded-full focus:outline-none" type="button">
+<span class="material-icons-round text-2xl">visibility_off</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div aria-hidden="true" class="mt-2 px-2 flex items-start gap-3">
+<span class="material-icons-round text-primary text-xl mt-0.5">info</span>
+<p class="text-sm text-gray-400 font-medium">We recommend a strong password for better security.</p>
+</div>
+</form>
+</main>
+<footer class="flex-none p-6 pt-0 bg-background-dark z-20 flex flex-col gap-6">
+<button aria-label="Create Account. Double tap to submit." class="w-full relative overflow-hidden rounded-xl bg-primary hover:bg-[#e6ac00] active:bg-[#cc9900] transition-all transform active:scale-[0.98] focus:ring-4 focus:ring-white focus:ring-offset-2 focus:ring-offset-background-dark touch-manipulation shadow-[0_0_20px_rgba(255,191,0,0.15)]">
+<div class="py-5 flex flex-col items-center justify-center gap-1">
+<span class="text-2xl font-black text-black uppercase tracking-[0.15em]">Create Account</span>
+</div>
+</button>
+<div class="text-center pb-2">
+<p class="text-white text-lg font-medium">
+            Already have an account? 
+            <a class="text-white font-bold underline decoration-2 underline-offset-4 decoration-primary hover:text-primary transition-colors focus:outline-none focus:bg-gray-800/50 px-2 py-1 rounded-lg ml-1" href="#">Log In</a>
+</p>
+</div>
+</footer>
+
+</body></html>

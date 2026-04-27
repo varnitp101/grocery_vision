@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Accessible App Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ffbf00",
+                        "primary-dim": "#cc9900",
+                        "background-dark": "#050505",
+                        "surface-dark": "#121212",
+                        "surface-highlight": "#1E1E1E",
+                        "text-light": "#ffffff",
+                        "text-dim": "#a3a3a3",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "3xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>*:focus-visible {
+            outline: 4px solid #ffbf00 !important;
+            outline-offset: 4px;
+            z-index: 50;
+        }body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }html, body {
+            height: 100%;
+            overflow: hidden; 
+        }.touch-target {
+            min-height: 64px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark font-display text-white flex flex-col h-full selection:bg-primary selection:text-black">
+<div aria-live="polite" class="sr-only" role="status">
+        Login Screen. Please enter your email and password. The Log In button is at the bottom of the screen.
+    </div>
+<header class="flex-none pt-14 pb-4 px-6 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-2 h-8 bg-primary rounded-full"></div>
+<h1 class="text-2xl font-bold tracking-wide">LOGIN</h1>
+</div>
+<div aria-hidden="true" class="text-primary opacity-50">
+<span class="material-icons-round text-3xl">lock</span>
+</div>
+</header>
+<main class="flex-grow flex flex-col justify-center px-4 sm:px-6 relative z-0 overflow-y-auto">
+<form action="#" class="w-full space-y-10" method="POST" onsubmit="event.preventDefault()">
+<div class="space-y-4 group">
+<label class="block text-xl font-semibold text-primary uppercase tracking-widest pl-1" for="email">
+                    Email Address
+                </label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+<span class="material-icons-round text-4xl text-gray-500 group-focus-within:text-primary transition-colors">email</span>
+</div>
+<input aria-required="true" autocomplete="email" class="block w-full h-24 pl-20 pr-6 bg-surface-dark border-4 border-surface-highlight rounded-2xl text-3xl text-white placeholder-gray-700 focus:border-primary focus:ring-0 focus:bg-surface-highlight transition-all shadow-inner" id="email" name="email" placeholder="name@mail.com" type="email"/>
+</div>
+</div>
+<div class="space-y-4 group">
+<div class="flex justify-between items-end pl-1">
+<label class="block text-xl font-semibold text-primary uppercase tracking-widest" for="password">
+                        Password
+                    </label>
+</div>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+<span class="material-icons-round text-4xl text-gray-500 group-focus-within:text-primary transition-colors">key</span>
+</div>
+<input aria-required="true" autocomplete="current-password" class="block w-full h-24 pl-20 pr-6 bg-surface-dark border-4 border-surface-highlight rounded-2xl text-3xl text-white placeholder-gray-700 focus:border-primary focus:ring-0 focus:bg-surface-highlight transition-all shadow-inner" id="password" name="password" placeholder="••••••" type="password"/>
+</div>
+</div>
+<div class="pt-2 flex justify-center">
+<button class="py-6 px-8 rounded-xl border-2 border-transparent focus:border-primary active:bg-surface-dark text-gray-400 font-medium text-lg tracking-wide hover:text-white transition-colors" type="button">
+                    Forgot Password?
+                </button>
+</div>
+</form>
+</main>
+<footer class="flex-none h-[25vh] w-full border-t-2 border-gray-800 bg-surface-dark sticky bottom-0 z-20">
+<button aria-label="Log In to your account" class="group w-full h-full relative bg-primary hover:bg-[#e6ac00] active:bg-[#cc9900] transition-colors flex flex-col items-center justify-center gap-3 touch-manipulation focus:outline-none focus:ring-4 focus:ring-white focus:ring-inset" type="submit">
+<div class="flex items-center gap-4">
+<span class="text-4xl sm:text-5xl font-black text-black uppercase tracking-[0.2em]">Log In</span>
+<span class="material-icons-round text-5xl text-black transform group-hover:translate-x-2 transition-transform">login</span>
+</div>
+<span class="text-sm font-bold text-black/60 uppercase tracking-widest">Double tap to activate</span>
+</button>
+</footer>
+
+</body></html>

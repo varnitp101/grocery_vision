@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lighting &amp; Position Helper</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ffa200",
+                        "background-light": "#ffffff",
+                        "background-dark": "#1b1b1d",
+                        "surface-dark": "#2C2C2E",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom pattern for "clinical" look */
+        .grid-pattern {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col font-display overflow-hidden select-none">
+<!-- Screen Reader Announcements (Hidden) -->
+<div aria-live="assertive" class="sr-only">
+        Warning: Lighting too low. Move phone 6 inches away. Haptic feedback active.
+    </div>
+<!-- Main Content Container -->
+<div class="relative flex flex-col h-screen w-full p-4 gap-4 max-w-md mx-auto">
+<!-- Background Texture -->
+<div class="absolute inset-0 grid-pattern pointer-events-none z-0" data-alt="Subtle technical grid pattern background"></div>
+<!-- TOP BLOCK: LIGHTING -->
+<!-- Utilizes a clinical, high-contrast card style -->
+<div class="relative z-10 flex-1 bg-surface-dark rounded-lg flex flex-col items-center justify-center text-center p-6 shadow-[0_4px_20px_rgba(0,0,0,0.3)] border border-white/5 overflow-hidden group">
+<!-- Decorative "Ruler" marks on the side -->
+<div class="absolute left-0 top-0 bottom-0 w-8 flex flex-col justify-between py-8 opacity-20">
+<div class="w-2 h-[1px] bg-white ml-2"></div>
+<div class="w-4 h-[1px] bg-white ml-2"></div>
+<div class="w-2 h-[1px] bg-white ml-2"></div>
+<div class="w-4 h-[1px] bg-white ml-2"></div>
+<div class="w-2 h-[1px] bg-white ml-2"></div>
+<div class="w-4 h-[1px] bg-white ml-2"></div>
+</div>
+<div class="flex flex-col items-center gap-4">
+<div class="relative">
+<!-- Sun Icon -->
+<span class="material-symbols-outlined text-white text-7xl font-light">wb_sunny</span>
+<!-- Warning indicator dot -->
+<div class="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full shadow-[0_0_10px_#ffa200]"></div>
+</div>
+<div class="space-y-1">
+<h2 class="text-white/50 text-xs font-bold tracking-[0.2em] uppercase">Lighting Status</h2>
+<p class="text-primary text-4xl font-bold tracking-tight leading-none uppercase drop-shadow-md">Too Dark</p>
+</div>
+<!-- Technical readout simulation -->
+<div class="flex items-center gap-2 mt-2 px-3 py-1 bg-black/40 rounded border border-white/10">
+<span class="text-white/60 text-xs font-mono">LUM: 12%</span>
+<div class="w-16 h-1 bg-white/20 rounded-full overflow-hidden">
+<div class="w-[12%] h-full bg-red-500"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- CENTRAL FOCAL POINT (The "Hinge") -->
+<!-- This acts as the visual anchor and haptic metaphor -->
+<div class="h-16 flex items-center justify-center relative shrink-0 z-20">
+<!-- Connecting Line -->
+<div class="absolute w-[2px] h-full bg-white/10 top-0 bottom-0"></div>
+<!-- The Pulse Metaphor (Static CSS representation of haptic feedback) -->
+<div class="relative flex items-center justify-center w-32 h-32">
+<!-- Outer Rings (Simulating ripples) -->
+<div class="absolute inset-0 rounded-full border border-primary/20 scale-150"></div>
+<div class="absolute inset-0 rounded-full border border-primary/40 scale-125"></div>
+<!-- Main Core -->
+<div class="relative w-20 h-20 bg-background-dark rounded-full border-4 border-primary shadow-[0_0_30px_rgba(255,162,0,0.5)] flex items-center justify-center z-10">
+<div class="w-12 h-12 bg-primary rounded-full animate-pulse-slow"></div>
+</div>
+</div>
+</div>
+<!-- BOTTOM BLOCK: POSITION -->
+<div class="relative z-10 flex-1 bg-surface-dark rounded-lg flex flex-col items-center justify-center text-center p-6 shadow-[0_4px_20px_rgba(0,0,0,0.3)] border border-white/5 overflow-hidden">
+<!-- Decorative "Ruler" marks on the side -->
+<div class="absolute right-0 top-0 bottom-0 w-8 flex flex-col justify-between py-8 opacity-20 items-end">
+<div class="w-2 h-[1px] bg-white mr-2"></div>
+<div class="w-4 h-[1px] bg-white mr-2"></div>
+<div class="w-2 h-[1px] bg-white mr-2"></div>
+<div class="w-4 h-[1px] bg-white mr-2"></div>
+<div class="w-2 h-[1px] bg-white mr-2"></div>
+<div class="w-4 h-[1px] bg-white mr-2"></div>
+</div>
+<div class="flex flex-col items-center gap-4">
+<span class="material-symbols-outlined text-white text-7xl font-light rotate-90">straighten</span>
+<div class="space-y-1">
+<h2 class="text-white/50 text-xs font-bold tracking-[0.2em] uppercase">Distance</h2>
+<p class="text-white text-3xl font-bold tracking-tight leading-none uppercase">Move Phone<br/><span class="text-primary">Back</span></p>
+</div>
+<!-- Distance Metric -->
+<div class="flex items-center gap-3 mt-4">
+<span class="material-symbols-outlined text-primary animate-bounce">arrow_downward</span>
+<span class="text-white/80 font-mono text-sm">+ 6 inches</span>
+</div>
+</div>
+</div>
+<!-- FOOTER ACTION -->
+<div class="shrink-0 pt-2 pb-4 safe-area-bottom">
+<button class="w-full bg-black text-primary border-2 border-primary/50 hover:bg-primary hover:text-black active:scale-[0.98] transition-all duration-150 h-16 rounded-lg flex items-center justify-center gap-3 shadow-lg group">
+<span class="material-symbols-outlined text-2xl group-hover:animate-spin">close</span>
+<span class="text-lg font-bold tracking-widest uppercase">Cancel Scan</span>
+</button>
+</div>
+</div>
+</body></html>

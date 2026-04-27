@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1093584945572",
+    "project_id": "grocery-eye",
+    "storage_bucket": "grocery-eye.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1093584945572:android:f98ad5783306f2e02f8131",
+        "android_client_info": {
+          "package_name": "com.example.grocery_vision"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1093584945572-a9urhmgnk9a8qaf5she31eu9fuqi3f5r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkS1yNNKGY1H0Af8JysNYra8ZJBzZCl4E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1093584945572-a9urhmgnk9a8qaf5she31eu9fuqi3f5r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
