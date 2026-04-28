@@ -25,9 +25,8 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
   }
 
   Future<void> _announceResult() async {
-    final priceStr = widget.product.price.toStringAsFixed(2);
     final String announcement = 'Result found: ${widget.product.name}. Brand: ${widget.product.brand}. '
-        'Price: \$$priceStr. Add to cart, details, repeat info, and scan next options available.';
+        'Category: ${widget.product.category}. Add to cart, details, repeat info, and scan next options available.';
     await _tts.speak(announcement);
   }
 
@@ -153,13 +152,21 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                Text(
-                                  '\$${widget.product.price.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    color: primaryAmber,
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: -1.0,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: primaryAmber.withAlpha(30),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: primaryAmber.withAlpha(80)),
+                                  ),
+                                  child: Text(
+                                    widget.product.category.toUpperCase(),
+                                    style: const TextStyle(
+                                      color: primaryAmber,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.5,
+                                    ),
                                   ),
                                 ),
                               ],

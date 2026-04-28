@@ -65,12 +65,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '\$${widget.product.price.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: primaryAmber,
-                      fontSize: 32,
+                    widget.product.brand.toUpperCase(),
+                    style: TextStyle(
+                      color: primaryAmber.withAlpha(200),
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 1.0,
+                      letterSpacing: 2.0,
                     ),
                   ),
                 ],

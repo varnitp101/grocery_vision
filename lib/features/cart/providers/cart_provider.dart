@@ -1,9 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/cart_item.dart';
 import '../../../models/product_model.dart';
+import '../../../services/firestore_service.dart';
 
 class CartNotifier extends StateNotifier<List<CartItem>> {
   CartNotifier() : super([]);
+
+  final FirestoreService _firestore = FirestoreService();
+
+  /// Load cart from Firestore on app start.
+  Future<void> loadFromFirestore() async {
+    try {
+      final items = await _firestore.loadCart();
+      state = items;
+    } catch (_) {
+      // Silently fail — cart will just be empty
+    }
+  }
 
   void addProduct(Product product) {
     final hasItem = state.any((item) => item.product.id == product.id);
@@ -17,10 +30,12 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     } else {
       state = [...state, CartItem(product: product, quantity: 1)];
     }
+    _syncToFirestore();
   }
 
   void removeProduct(String productId) {
     state = state.where((item) => item.product.id != productId).toList();
+    _syncToFirestore();
   }
 
   void updateQuantity(String productId, int newQuantity) {
@@ -34,14 +49,20 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
       }
       return item;
     }).toList();
-  }
-
-  double get totalPrice {
-    return state.fold(0, (sum, item) => sum + (item.product.price * item.quantity));
+    _syncToFirestore();
   }
 
   int get totalItems {
     return state.fold(0, (sum, item) => sum + item.quantity);
+  }
+
+  /// Sync cart state to Firestore in background.
+  Future<void> _syncToFirestore() async {
+    try {
+      await _firestore.saveCart(state);
+    } catch (_) {
+      // Silently fail — local state is still correct
+    }
   }
 }
 

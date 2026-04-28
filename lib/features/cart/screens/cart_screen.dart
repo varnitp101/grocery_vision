@@ -15,7 +15,7 @@ class CartScreen extends ConsumerWidget {
 
     final cartItems = ref.watch(cartProvider);
     final totalItems = ref.watch(cartProvider.notifier).totalItems;
-    final totalPrice = ref.watch(cartProvider.notifier).totalPrice;
+
 
     return Scaffold(
       backgroundColor: navyDeep,
@@ -60,57 +60,30 @@ class CartScreen extends ConsumerWidget {
                   border: Border.all(color: primaryAmber, width: 2),
                 ),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Text(
-                            'ITEMS',
-                            style: TextStyle(
-                              color: Colors.white.withAlpha(180),
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2.0,
-                            ),
+                    Column(
+                      children: [
+                        Text(
+                          'TOTAL ITEMS',
+                          style: TextStyle(
+                            color: Colors.white.withAlpha(180),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2.0,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            totalItems.toString(),
-                            style: const TextStyle(
-                              color: primaryAmber,
-                              fontSize: 36,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -1.0,
-                            ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          totalItems.toString(),
+                          style: const TextStyle(
+                            color: primaryAmber,
+                            fontSize: 36,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.0,
                           ),
-                        ],
-                      ),
-                    ),
-                    Container(width: 1, height: 60, color: Colors.white.withAlpha(25)),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Text(
-                            'TOTAL',
-                            style: TextStyle(
-                              color: Colors.white.withAlpha(180),
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2.0,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '\$${totalPrice.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: primaryAmber,
-                              fontSize: 36,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -1.0,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -233,7 +206,7 @@ class CartScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '\$${item.product.price.toStringAsFixed(2)}  •  ${item.product.brand}',
+                      item.product.brand,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,

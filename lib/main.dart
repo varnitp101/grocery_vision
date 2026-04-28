@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'features/onboarding/screens/onboarding_screen.dart';
+import 'services/gemini_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Initialize Gemini AI model (pre-warm so first scan is faster)
+  GeminiService().initialize();
 
   final prefs = await SharedPreferences.getInstance();
 

@@ -1,44 +1,62 @@
 import 'package:camera/camera.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../models/product_model.dart';
+import '../../../services/gemini_service.dart';
+import '../../../services/firestore_service.dart';
 
 final scannerControllerProvider = StateNotifierProvider<ScannerControllerNotifier, ScannerState>((ref) {
   return ScannerControllerNotifier();
 });
 
+/// Possible scanner phases
+enum ScanPhase {
+  idle,       // Camera live, waiting for user action
+  capturing,  // Taking a photo
+  analyzing,  // Gemini is processing the image
+  found,      // Product identified
+  notFound,   // Product not recognized
+  error,      // Something went wrong
+}
+
 class ScannerState {
   final CameraController? controller;
   final bool isInitialized;
-  final bool isProcessing;
+  final ScanPhase phase;
   final String statusMessage;
-  final double luminosity;
+  final Product? scannedProduct;
 
   ScannerState({
     this.controller,
     this.isInitialized = false,
-    this.isProcessing = false,
-    this.statusMessage = 'System Ready',
-    this.luminosity = 100.0,
+    this.phase = ScanPhase.idle,
+    this.statusMessage = 'POINT AT PRODUCT',
+    this.scannedProduct,
   });
 
   ScannerState copyWith({
     CameraController? controller,
     bool? isInitialized,
-    bool? isProcessing,
+    ScanPhase? phase,
     String? statusMessage,
-    double? luminosity,
+    Product? scannedProduct,
+    bool clearProduct = false,
   }) {
     return ScannerState(
       controller: controller ?? this.controller,
       isInitialized: isInitialized ?? this.isInitialized,
-      isProcessing: isProcessing ?? this.isProcessing,
+      phase: phase ?? this.phase,
       statusMessage: statusMessage ?? this.statusMessage,
-      luminosity: luminosity ?? this.luminosity,
+      scannedProduct: clearProduct ? null : (scannedProduct ?? this.scannedProduct),
     );
   }
 }
 
 class ScannerControllerNotifier extends StateNotifier<ScannerState> {
   ScannerControllerNotifier() : super(ScannerState());
+
+  final GeminiService _gemini = GeminiService();
+  final FirestoreService _firestore = FirestoreService();
+  bool _isBusy = false;
 
   Future<void> initializeCamera() async {
     final cameras = await availableCameras();
@@ -63,14 +81,77 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
       state = state.copyWith(
         controller: controller,
         isInitialized: true,
-        statusMessage: 'Point at product',
+        statusMessage: 'POINT AT PRODUCT',
       );
-      
-      // Start image stream for luminosity/barcode processing later
-      // controller.startImageStream((image) => _processCameraImage(image));
     } catch (e) {
       state = state.copyWith(statusMessage: 'Camera error: $e');
     }
+  }
+
+  /// Capture photo → send to Gemini → identify product
+  /// Called on double-tap from the scanner screen.
+  Future<void> captureAndIdentify() async {
+    if (_isBusy) return;
+    if (state.controller == null || !state.isInitialized) return;
+
+    _isBusy = true;
+
+    try {
+      // Phase 1: Capturing
+      state = state.copyWith(
+        phase: ScanPhase.capturing,
+        statusMessage: 'CAPTURING...',
+        clearProduct: true,
+      );
+
+      // Take the photo
+      final XFile photo = await state.controller!.takePicture();
+      final imageBytes = await photo.readAsBytes();
+
+      // Phase 2: Analyzing with Gemini
+      state = state.copyWith(
+        phase: ScanPhase.analyzing,
+        statusMessage: 'AI ANALYZING...',
+      );
+
+      // Send to Gemini
+      _gemini.initialize();
+      final product = await _gemini.identifyProduct(imageBytes);
+
+      if (product != null) {
+        // Phase 3: Found!
+        state = state.copyWith(
+          phase: ScanPhase.found,
+          statusMessage: 'PRODUCT FOUND!',
+          scannedProduct: product,
+        );
+
+        // Log scan to Firestore history
+        await _firestore.logScan(product);
+      } else {
+        // Phase 3: Not found
+        state = state.copyWith(
+          phase: ScanPhase.notFound,
+          statusMessage: 'NOT RECOGNIZED',
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        phase: ScanPhase.error,
+        statusMessage: 'SCAN FAILED',
+      );
+    } finally {
+      _isBusy = false;
+    }
+  }
+
+  /// Reset to idle state (after navigating away from result/error)
+  void resetToIdle() {
+    state = state.copyWith(
+      phase: ScanPhase.idle,
+      statusMessage: 'POINT AT PRODUCT',
+      clearProduct: true,
+    );
   }
 
   @override
