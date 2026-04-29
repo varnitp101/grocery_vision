@@ -10,6 +10,9 @@ class Product {
   final String ingredients;
   final List<String> allergens;
   final String? size;
+  final String? price;
+  final bool isFood;
+  final String? honestTake;
 
   const Product({
     required this.id,
@@ -23,6 +26,9 @@ class Product {
     required this.ingredients,
     required this.allergens,
     this.size,
+    this.price,
+    this.isFood = true,
+    this.honestTake,
   });
 
   /// Parse from Gemini's structured JSON response
@@ -49,6 +55,9 @@ class Product {
       ingredients: json['ingredients'] as String? ?? 'Not available',
       allergens: allergens,
       size: json['size'] as String?,
+      price: json['price'] as String?,
+      isFood: json['isFood'] as bool? ?? true,
+      honestTake: json['honestTake'] as String?,
     );
   }
 
@@ -66,6 +75,9 @@ class Product {
       'ingredients': ingredients,
       'allergens': allergens,
       'size': size,
+      'price': price,
+      'isFood': isFood,
+      'honestTake': honestTake,
     };
   }
 
@@ -90,6 +102,9 @@ class Product {
       ingredients: json['ingredients'] as String? ?? 'Not available',
       allergens: allergens,
       size: json['size'] as String?,
+      price: json['price'] as String?,
+      isFood: json['isFood'] as bool? ?? true,
+      honestTake: json['honestTake'] as String?,
     );
   }
 }

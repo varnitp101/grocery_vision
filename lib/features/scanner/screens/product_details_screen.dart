@@ -27,9 +27,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Future<void> _announceDetails() async {
-    final String announcement = 'Detailed Product View for ${widget.product.name}. Summary playing. '
-        'Contains allergens: ${widget.product.allergens.join(', ')}. '
-        'Ingredients: ${widget.product.ingredients}.';
+    final String announcement = 'Detailed Product View for ${widget.product.name}. '
+        '${widget.product.honestTake != null ? "Gemini's Take: ${widget.product.honestTake}. " : ""}'
+        '${widget.product.isFood ? "Contains allergens: ${widget.product.allergens.join(', ')}. " : ""}'
+        '${widget.product.isFood ? "Ingredients: ${widget.product.ingredients}." : ""}';
     await _tts.speak(announcement);
   }
 
@@ -140,24 +141,86 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  // BRUTALLY HONEST TAKE (New Section)
+                  if (widget.product.honestTake != null && widget.product.honestTake!.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            primaryAmber.withAlpha(50),
+                            surfaceNavy,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: primaryAmber.withAlpha(100), width: 2),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.psychology_outlined, color: primaryAmber, size: 28),
+                              const SizedBox(width: 12),
+                              Text(
+                                'GEMINI\'S HONEST TAKE',
+                                style: TextStyle(
+                                  color: primaryAmber,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            widget.product.honestTake!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                   
-                  // Top Stats
+                  // Top Stats (Dynamic)
                   Row(
                     children: [
-                      Expanded(
-                        child: _StatCard(
-                          label: 'Calories',
-                          value: widget.product.calories.toString(),
-                          surfaceNavy: surfaceNavy,
-                          primaryAmber: primaryAmber,
+                      if (widget.product.isFood)
+                        Expanded(
+                          child: _StatCard(
+                            label: 'Calories',
+                            value: widget.product.calories.toString(),
+                            surfaceNavy: surfaceNavy,
+                            primaryAmber: primaryAmber,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
+                      if (widget.product.isFood) const SizedBox(width: 16),
+                      if (widget.product.price != null)
+                        Expanded(
+                          child: _StatCard(
+                            label: 'Price',
+                            value: widget.product.price!,
+                            surfaceNavy: surfaceNavy,
+                            primaryAmber: primaryAmber,
+                          ),
+                        ),
+                      if (widget.product.price != null) const SizedBox(width: 16),
                       Expanded(
                         child: _StatCard(
-                          label: 'Serving Size',
-                          value: widget.product.servingSize.split(' ').first,
-                          subtext: widget.product.servingSize,
+                          label: 'Size',
+                          value: widget.product.size ?? widget.product.servingSize.split(' ').first,
+                          subtext: widget.product.size == null ? widget.product.servingSize : null,
                           surfaceNavy: surfaceNavy,
                           primaryAmber: primaryAmber,
                         ),
@@ -166,150 +229,156 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                   const SizedBox(height: 24),
                   
-                  // Nutrition Facts Grid
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4.0),
-                    child: Text(
-                      'NUTRITION FACTS',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2.0,
+                  // Nutrition Facts Grid (Only if food and info exists)
+                  if (widget.product.isFood && widget.product.nutritionInfo.isNotEmpty) ...[
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4.0),
+                      child: Text(
+                        'NUTRITION FACTS',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2.0,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 2.5,
+                    const SizedBox(height: 12),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 2.5,
+                      ),
+                      itemCount: widget.product.nutritionInfo.length,
+                      itemBuilder: (context, index) {
+                        final key = widget.product.nutritionInfo.keys.elementAt(index);
+                        final value = widget.product.nutritionInfo.values.elementAt(index);
+                        final alphas = [255, 128, 76, 204];
+                        final alpha = alphas[index % alphas.length];
+                        
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: surfaceNavy.withAlpha(150),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border(left: BorderSide(color: primaryAmber.withAlpha(alpha), width: 4)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                key.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                              Text(
+                                value,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
-                    itemCount: widget.product.nutritionInfo.length,
-                    itemBuilder: (context, index) {
-                      final key = widget.product.nutritionInfo.keys.elementAt(index);
-                      final value = widget.product.nutritionInfo.values.elementAt(index);
-                      final alphas = [255, 128, 76, 204];
-                      final alpha = alphas[index % alphas.length];
-                      
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: surfaceNavy.withAlpha(150),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border(left: BorderSide(color: primaryAmber.withAlpha(alpha), width: 4)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              key.toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white54,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-                            Text(
-                              value,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
+                  ],
                   
                   // Ingredients List
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4.0),
-                    child: Text(
-                      'FULL INGREDIENTS LIST',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2.0,
+                  if (widget.product.ingredients != 'N/A' && widget.product.ingredients != 'Not available') ...[
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4.0),
+                      child: Text(
+                        'COMPOSITION / INGREDIENTS',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2.0,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: surfaceNavy,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withAlpha(25)),
-                    ),
-                    child: Text(
-                      widget.product.ingredients,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        height: 1.5,
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: surfaceNavy,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withAlpha(25)),
+                      ),
+                      child: Text(
+                        widget.product.ingredients,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          height: 1.5,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
+                  ],
                   
-                  // Allergen Warning
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: surfaceNavy,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: primaryAmber, width: 4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: primaryAmber.withAlpha(25),
-                          blurRadius: 20,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.warning_rounded, color: primaryAmber, size: 36),
-                            SizedBox(width: 12),
-                            Text(
-                              'ALLERGEN WARNING',
-                              style: TextStyle(
-                                color: primaryAmber,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2.0,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'CONTAINS: ${widget.product.allergens.join(", ").toUpperCase()}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.0,
+                  // Allergen Warning (Only if food and allergens exist)
+                  if (widget.product.isFood && widget.product.allergens.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: surfaceNavy,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: primaryAmber, width: 4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryAmber.withAlpha(25),
+                            blurRadius: 20,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.warning_rounded, color: primaryAmber, size: 36),
+                              SizedBox(width: 12),
+                              Text(
+                                'ALLERGEN WARNING',
+                                style: TextStyle(
+                                  color: primaryAmber,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 2.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'CONTAINS: ${widget.product.allergens.join(", ").toUpperCase()}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 32),
+                  ],
                 ],
               ),
             ),
@@ -400,12 +469,15 @@ class _StatCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           if (subtext != null) ...[

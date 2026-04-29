@@ -30,7 +30,14 @@ class GeminiService {
     try {
       final response = await _model.generateContent([
         Content.multi([
-          TextPart('Identify this grocery product. Return ONLY raw JSON (no markdown): {"name":"Product name","brand":"Brand","category":"Category","calories":0,"servingSize":"Size","nutritionInfo":{"Fat":"g","Carb":"g","Protein":"g","Sodium":"mg"},"ingredients":"List","allergens":[],"size":"Weight"}. If unknown return {"error":"not_found"}. Be concise.'),
+          TextPart('Identify this grocery product. Return ONLY raw JSON (no markdown). '
+              'The JSON must follow this exact schema: '
+              '{"name":"Product Name","brand":"Brand","category":"Category","isFood":true/false,"price":"Approx Price (e.g. ₹60)","size":"Weight/Qty",'
+              '"calories":0,"servingSize":"N/A","nutritionInfo":{"Fat":"g","Carb":"g"},'
+              '"ingredients":"List of ingredients or N/A","allergens":[],'
+              '"honestTake":"A brutally honest, short, punchy, and helpful take on this product. Is it a health bomb? Is it worth the price? Be objective but bold."}. '
+              'If the product is NOT food (e.g. soap, vaseline), set "isFood":false and "calories":0. '
+              'If unknown return {"error":"not_found"}.'),
           InlineDataPart('image/jpeg', imageBytes),
         ]),
       ]);
