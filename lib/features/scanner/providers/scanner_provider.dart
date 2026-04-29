@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/product_model.dart';
@@ -11,8 +12,8 @@ final scannerControllerProvider = StateNotifierProvider<ScannerControllerNotifie
 /// Possible scanner phases
 enum ScanPhase {
   idle,       // Camera live, waiting for user action
-  capturing,  // Taking a photo
-  analyzing,  // Gemini is processing the image
+  capturing,  // Taking burst photos (~2 seconds)
+  analyzing,  // Gemini is processing the best image (camera dismissed)
   found,      // Product identified
   notFound,   // Product not recognized
   error,      // Something went wrong
@@ -24,13 +25,16 @@ class ScannerState {
   final ScanPhase phase;
   final String statusMessage;
   final Product? scannedProduct;
+  /// Progress during capture burst: 0.0 to 1.0
+  final double captureProgress;
 
   ScannerState({
     this.controller,
     this.isInitialized = false,
     this.phase = ScanPhase.idle,
-    this.statusMessage = 'POINT AT PRODUCT',
+    this.statusMessage = 'DOUBLE TAP TO SCAN',
     this.scannedProduct,
+    this.captureProgress = 0.0,
   });
 
   ScannerState copyWith({
@@ -40,6 +44,7 @@ class ScannerState {
     String? statusMessage,
     Product? scannedProduct,
     bool clearProduct = false,
+    double? captureProgress,
   }) {
     return ScannerState(
       controller: controller ?? this.controller,
@@ -47,6 +52,7 @@ class ScannerState {
       phase: phase ?? this.phase,
       statusMessage: statusMessage ?? this.statusMessage,
       scannedProduct: clearProduct ? null : (scannedProduct ?? this.scannedProduct),
+      captureProgress: captureProgress ?? this.captureProgress,
     );
   }
 }
@@ -57,58 +63,138 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
   final GeminiService _gemini = GeminiService();
   final FirestoreService _firestore = FirestoreService();
   bool _isBusy = false;
+  CameraDescription? _cameraDescription;
 
   Future<void> initializeCamera() async {
-    final cameras = await availableCameras();
-    if (cameras.isEmpty) {
-      state = state.copyWith(statusMessage: 'No cameras found');
+    // If we already have a working controller, skip
+    if (state.isInitialized &&
+        state.controller != null &&
+        state.controller!.value.isInitialized) {
       return;
     }
 
-    final camera = cameras.firstWhere(
-      (cam) => cam.lensDirection == CameraLensDirection.back,
-      orElse: () => cameras.first,
-    );
-
-    final controller = CameraController(
-      camera,
-      ResolutionPreset.high,
-      enableAudio: false,
-    );
+    // Dispose any old controller first
+    try {
+      await state.controller?.dispose();
+    } catch (_) {}
 
     try {
+      if (_cameraDescription == null) {
+        final cameras = await availableCameras();
+        if (cameras.isEmpty) {
+          state = state.copyWith(statusMessage: 'No cameras found');
+          return;
+        }
+        _cameraDescription = cameras.firstWhere(
+          (cam) => cam.lensDirection == CameraLensDirection.back,
+          orElse: () => cameras.first,
+        );
+      }
+
+      final controller = CameraController(
+        _cameraDescription!,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+
       await controller.initialize();
       state = state.copyWith(
         controller: controller,
         isInitialized: true,
-        statusMessage: 'POINT AT PRODUCT',
+        phase: ScanPhase.idle,
+        statusMessage: 'DOUBLE TAP TO SCAN',
       );
     } catch (e) {
-      state = state.copyWith(statusMessage: 'Camera error: $e');
+      state = state.copyWith(
+        isInitialized: false,
+        statusMessage: 'Camera error — reopen scanner',
+      );
     }
   }
 
-  /// Capture photo → send to Gemini → identify product
-  /// Called on double-tap from the scanner screen.
+  /// Reinitialize camera if it crashed or got disposed.
+  Future<void> _ensureCameraReady() async {
+    final ctrl = state.controller;
+    if (ctrl == null || !ctrl.value.isInitialized) {
+      // Force re-create the controller
+      state = state.copyWith(isInitialized: false);
+      await initializeCamera();
+    }
+  }
+
+  /// Burst-capture 3 photos over ~2 seconds, pick the sharpest one,
+  /// then send it to Gemini for identification.
   Future<void> captureAndIdentify() async {
     if (_isBusy) return;
-    if (state.controller == null || !state.isInitialized) return;
 
     _isBusy = true;
 
     try {
-      // Phase 1: Capturing
+      // Make sure camera is alive before we start
+      await _ensureCameraReady();
+      if (state.controller == null || !state.isInitialized) {
+        state = state.copyWith(
+          phase: ScanPhase.error,
+          statusMessage: 'CAMERA UNAVAILABLE',
+        );
+        _isBusy = false;
+        return;
+      }
+
+      // Phase 1: Burst capture
       state = state.copyWith(
         phase: ScanPhase.capturing,
-        statusMessage: 'CAPTURING...',
+        statusMessage: 'HOLD STEADY...',
         clearProduct: true,
+        captureProgress: 0.0,
       );
 
-      // Take the photo
-      final XFile photo = await state.controller!.takePicture();
-      final imageBytes = await photo.readAsBytes();
+      final List<Uint8List> capturedImages = [];
+      // 3 photos with 700ms gaps = ~2.1s total (safer for device cameras)
+      const int burstCount = 3;
+      const Duration burstInterval = Duration(milliseconds: 700);
 
-      // Phase 2: Analyzing with Gemini
+      for (int i = 0; i < burstCount; i++) {
+        if (!mounted) break;
+
+        try {
+          // Check controller is still valid before each shot
+          if (state.controller == null || !state.controller!.value.isInitialized) {
+            break;
+          }
+          final XFile photo = await state.controller!.takePicture();
+          final bytes = await photo.readAsBytes();
+          capturedImages.add(bytes);
+        } catch (e) {
+          // Camera may have errored — wait and try again for next shot
+          await Future.delayed(const Duration(milliseconds: 300));
+        }
+
+        // Update progress
+        state = state.copyWith(
+          captureProgress: (i + 1) / burstCount,
+        );
+
+        if (i < burstCount - 1) {
+          await Future.delayed(burstInterval);
+        }
+      }
+
+      if (capturedImages.isEmpty) {
+        state = state.copyWith(
+          phase: ScanPhase.error,
+          statusMessage: 'CAPTURE FAILED',
+        );
+        _isBusy = false;
+        return;
+      }
+
+      // Pick best image — larger file = sharper/more detail (JPEG compression)
+      final Uint8List bestImage = capturedImages.reduce(
+        (best, current) => current.lengthInBytes > best.lengthInBytes ? current : best,
+      );
+
+      // Phase 2: Analyzing — full-screen overlay replaces camera
       state = state.copyWith(
         phase: ScanPhase.analyzing,
         statusMessage: 'AI ANALYZING...',
@@ -116,20 +202,17 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
 
       // Send to Gemini
       _gemini.initialize();
-      final product = await _gemini.identifyProduct(imageBytes);
+      final product = await _gemini.identifyProduct(bestImage);
 
       if (product != null) {
-        // Phase 3: Found!
         state = state.copyWith(
           phase: ScanPhase.found,
           statusMessage: 'PRODUCT FOUND!',
           scannedProduct: product,
         );
-
-        // Log scan to Firestore history
-        await _firestore.logScan(product);
+        // Log scan to Firestore history (don't block on this)
+        _firestore.logScan(product);
       } else {
-        // Phase 3: Not found
         state = state.copyWith(
           phase: ScanPhase.notFound,
           statusMessage: 'NOT RECOGNIZED',
@@ -145,13 +228,18 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
     }
   }
 
-  /// Reset to idle state (after navigating away from result/error)
+  /// Reset to idle state so user can scan again.
+  /// Also re-initializes camera if it died during the last scan.
   void resetToIdle() {
+    _isBusy = false;
     state = state.copyWith(
       phase: ScanPhase.idle,
-      statusMessage: 'POINT AT PRODUCT',
+      statusMessage: 'DOUBLE TAP TO SCAN',
       clearProduct: true,
+      captureProgress: 0.0,
     );
+    // Re-init camera in background if it died
+    _ensureCameraReady();
   }
 
   @override

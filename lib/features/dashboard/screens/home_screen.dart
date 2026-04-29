@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../scanner/screens/scanner_screen.dart';
 import 'dashboard_screen.dart';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -54,7 +55,7 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               
-              // Big Amber Card
+              // Big Amber Card — primary scan action
               Expanded(
                 flex: 3,
                 child: GestureDetector(
@@ -64,7 +65,7 @@ class HomeScreen extends StatelessWidget {
                     );
                   },
                   child: Semantics(
-                    label: 'Start scanning. Tap or speak to scan.',
+                    label: 'Start scanning. Tap to open camera.',
                     button: true,
                     child: Container(
                       decoration: BoxDecoration(
@@ -84,16 +85,16 @@ class HomeScreen extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              _buildBlackIconBlock(Icons.mic),
+                              _buildBlackIconBlock(Icons.auto_awesome),
                               const SizedBox(width: 16),
                               _buildBlackIconBlock(Icons.camera_alt, isLarge: true),
                               const SizedBox(width: 16),
-                              _buildBlackIconBlock(Icons.qr_code_scanner),
+                              _buildBlackIconBlock(Icons.search_rounded),
                             ],
                           ),
                           const SizedBox(height: 40),
                           const Text(
-                            'TAP OR\nSPEAK\nTO SCAN',
+                            'TAP TO\nSCAN\nPRODUCT',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: AppTheme.darkNavy,
@@ -105,7 +106,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 40),
                           const Text(
-                            'ACTIVE',
+                            'AI POWERED',
                             style: TextStyle(
                               color: AppTheme.darkNavy,
                               fontSize: 14,

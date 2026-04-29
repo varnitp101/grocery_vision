@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 class ScanErrorScreen extends StatefulWidget {
@@ -8,146 +9,161 @@ class ScanErrorScreen extends StatefulWidget {
   State<ScanErrorScreen> createState() => _ScanErrorScreenState();
 }
 
-class _ScanErrorScreenState extends State<ScanErrorScreen> {
+class _ScanErrorScreenState extends State<ScanErrorScreen>
+    with SingleTickerProviderStateMixin {
   final FlutterTts _tts = FlutterTts();
+  late AnimationController _breatheController;
 
   @override
   void initState() {
     super.initState();
+    _breatheController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
     _announceError();
   }
 
   Future<void> _announceError() async {
-    await _tts.speak('Item not found. Please move the phone closer and double-tap to try again.');
+    await _tts.speak('Product not recognized. Tap Retry to go back and try again.');
   }
 
   @override
   void dispose() {
     _tts.stop();
+    _breatheController.dispose();
     super.dispose();
+  }
+
+  void _retry() {
+    HapticFeedback.mediumImpact();
+    _tts.stop();
+    Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    const errorClinical = Color(0xFFB00020);
+    const errorColor = Color(0xFFB00020);
 
     return Scaffold(
-      backgroundColor: errorClinical,
+      backgroundColor: const Color(0xFF0A0F1C),
       body: SafeArea(
         child: Column(
           children: [
-            // Top Half: Status Indicator
+            // Top: error info
             Expanded(
-              flex: 55, // Takes ~55% height
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
+              flex: 55,
+              child: Center(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Container(
-                          width: 120,
-                          height: 120,
+                    AnimatedBuilder(
+                      animation: _breatheController,
+                      builder: (context, _) {
+                        return Container(
+                          width: 120 + (_breatheController.value * 12),
+                          height: 120 + (_breatheController.value * 12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(25),
+                            color: errorColor.withAlpha(30),
                             shape: BoxShape.circle,
+                            border: Border.all(
+                              color: errorColor.withAlpha(
+                                100 + (_breatheController.value * 80).toInt(),
+                              ),
+                              width: 3,
+                            ),
                           ),
-                        ),
-                        const Icon(
-                          Icons.search_off_rounded,
-                          color: Colors.white,
-                          size: 84,
-                        ),
-                      ],
+                          child: const Icon(
+                            Icons.search_off_rounded,
+                            color: Colors.white,
+                            size: 64,
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 32),
                     const Text(
-                      'ITEM\nNOT FOUND',
+                      'NOT\nRECOGNIZED',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 40,
                         fontWeight: FontWeight.w900,
                         height: 1.1,
-                        letterSpacing: -0.5,
+                        letterSpacing: 1.0,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Please move the phone closer to the product.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                        height: 1.4,
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Text(
+                        'Try holding the product closer\nwith the label facing the camera.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withAlpha(180),
+                          fontSize: 17,
+                          fontWeight: FontWeight.w500,
+                          height: 1.5,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            
-            // Bottom Half: Giant Touch Target (45% height)
+
+            // Bottom: Retry button (single tap, clear instruction)
             Expanded(
               flex: 45,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16).copyWith(bottom: 24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [
-                      Colors.black.withAlpha(50),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-                child: Semantics(
-                  label: 'Retry Scan. Double tap to try again.',
-                  button: true,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _tts.stop();
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: errorClinical,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(32),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Semantics(
+                          label: 'Retry scan',
+                          button: true,
+                          child: ElevatedButton(
+                            onPressed: _retry,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: errorColor,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28),
+                              ),
+                              elevation: 10,
+                            ),
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.refresh_rounded, size: 48),
+                                SizedBox(height: 8),
+                                Text(
+                                  'RETRY',
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 3.0,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'TAP TO GO BACK',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                      elevation: 10,
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.refresh_rounded, size: 56, color: errorClinical),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'RETRY',
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2.0,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'DOUBLE TAP SCREEN',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.5,
-                            color: errorClinical.withAlpha(150),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
               ),
             ),
