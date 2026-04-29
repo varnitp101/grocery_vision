@@ -27,6 +27,8 @@ class ScannerState {
   final Product? scannedProduct;
   /// Progress during capture burst: 0.0 to 1.0
   final double captureProgress;
+  /// The best captured image bytes from burst capture
+  final Uint8List? capturedImageBytes;
 
   ScannerState({
     this.controller,
@@ -35,6 +37,7 @@ class ScannerState {
     this.statusMessage = 'DOUBLE TAP TO SCAN',
     this.scannedProduct,
     this.captureProgress = 0.0,
+    this.capturedImageBytes,
   });
 
   ScannerState copyWith({
@@ -45,6 +48,8 @@ class ScannerState {
     Product? scannedProduct,
     bool clearProduct = false,
     double? captureProgress,
+    Uint8List? capturedImageBytes,
+    bool clearImage = false,
   }) {
     return ScannerState(
       controller: controller ?? this.controller,
@@ -53,6 +58,7 @@ class ScannerState {
       statusMessage: statusMessage ?? this.statusMessage,
       scannedProduct: clearProduct ? null : (scannedProduct ?? this.scannedProduct),
       captureProgress: captureProgress ?? this.captureProgress,
+      capturedImageBytes: clearImage ? null : (capturedImageBytes ?? this.capturedImageBytes),
     );
   }
 }
@@ -198,6 +204,7 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
       state = state.copyWith(
         phase: ScanPhase.analyzing,
         statusMessage: 'AI ANALYZING...',
+        capturedImageBytes: bestImage,
       );
 
       // Send to Gemini
@@ -236,6 +243,7 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
       phase: ScanPhase.idle,
       statusMessage: 'DOUBLE TAP TO SCAN',
       clearProduct: true,
+      clearImage: true,
       captureProgress: 0.0,
     );
     // Re-init camera in background if it died

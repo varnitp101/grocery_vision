@@ -4,6 +4,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../providers/settings_provider.dart';
 
+// Top 20 Indian languages + English
+const List<String> _supportedLanguages = [
+  'English',
+  'Hindi',
+  'Bengali',
+  'Telugu',
+  'Marathi',
+  'Tamil',
+  'Urdu',
+  'Gujarati',
+  'Kannada',
+  'Malayalam',
+  'Odia',
+  'Punjabi',
+  'Assamese',
+  'Maithili',
+  'Sanskrit',
+  'Santali',
+  'Kashmiri',
+  'Nepali',
+  'Sindhi',
+  'Dogri',
+  'Konkani',
+];
+
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -22,8 +47,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _testVoice() async {
     final settings = ref.read(settingsProvider);
-    await _tts.setSpeechRate(settings.speechRate / 2.0); // TTS expects 0-1 range roughly
-    await _tts.setPitch(settings.voicePitch + 0.5); // Adjust to TTS range
+    await _tts.setSpeechRate(settings.speechRate / 2.0);
+    await _tts.setPitch(settings.voicePitch + 0.5);
     await _tts.speak('Hello! This is your voice assistant. All settings are configured.');
   }
 
@@ -35,10 +60,102 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  void _showLanguagePicker() {
+    final settings = ref.read(settingsProvider);
+    final notifier = ref.read(settingsProvider.notifier);
+    const primaryAmber = Color(0xFFFFC107);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          decoration: const BoxDecoration(
+            color: Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(60),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(24, 20, 24, 12),
+                child: Text(
+                  'SELECT LANGUAGE',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2.0,
+                  ),
+                ),
+              ),
+              Divider(color: Colors.white.withAlpha(20), height: 1),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _supportedLanguages.length,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemBuilder: (context, index) {
+                    final lang = _supportedLanguages[index];
+                    final isSelected = settings.language == lang;
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          notifier.setLanguage(lang);
+                          Navigator.of(ctx).pop();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                          color: isSelected ? primaryAmber.withAlpha(20) : Colors.transparent,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  lang,
+                                  style: TextStyle(
+                                    color: isSelected ? primaryAmber : Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              if (isSelected)
+                                const Icon(Icons.check_circle_rounded, color: primaryAmber, size: 22),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const bgBlack = Color(0xFF000000);
-    const surface = Color(0xFF121212);
     const highlight = Color(0xFF2A2A2A);
     const primaryAmber = Color(0xFFFFC107);
 
@@ -75,7 +192,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     height: 48,
                     width: 48,
                     decoration: BoxDecoration(
-                      color: surface,
+                      color: Colors.white.withAlpha(8),
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white.withAlpha(50)),
                     ),
@@ -88,7 +205,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // Scrollable Content
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 220),
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
                 children: [
                   // ── AI Voice Assistant Toggle ──
                   _SettingsCard(
@@ -287,35 +404,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Vibration Intensity ──
+                  // ── Vibration Intensity ── (with text labels always visible)
                   _SettingsCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            const Text(
-                              'Vibration Intensity',
-                              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              settings.vibrationLevel.name[0].toUpperCase() + settings.vibrationLevel.name.substring(1),
-                              style: TextStyle(
-                                color: Colors.white.withAlpha(150),
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                        const Text(
+                          'Vibration Intensity',
+                          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 16),
                         SizedBox(
-                          height: 64,
+                          height: 56,
                           child: Row(
                             children: VibrationLevel.values.map((level) {
                               final isSelected = settings.vibrationLevel == level;
+                              final label = level.name[0].toUpperCase() + level.name.substring(1);
                               return Expanded(
                                 child: Padding(
                                   padding: EdgeInsets.only(
@@ -333,25 +437,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         color: isSelected ? primaryAmber : highlight,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: isSelected ? Colors.white : Colors.transparent,
-                                          width: isSelected ? 2 : 0,
+                                          color: isSelected ? Colors.white : Colors.white.withAlpha(25),
+                                          width: isSelected ? 2 : 1,
                                         ),
                                         boxShadow: isSelected
                                             ? [BoxShadow(color: primaryAmber.withAlpha(128), blurRadius: 15)]
                                             : null,
                                       ),
-                                      child: isSelected
-                                          ? Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Container(width: 3, height: 24, decoration: BoxDecoration(color: Colors.black.withAlpha(100), borderRadius: BorderRadius.circular(2))),
-                                                const SizedBox(width: 4),
-                                                Container(width: 3, height: 40, decoration: BoxDecoration(color: Colors.black.withAlpha(100), borderRadius: BorderRadius.circular(2))),
-                                                const SizedBox(width: 4),
-                                                Container(width: 3, height: 24, decoration: BoxDecoration(color: Colors.black.withAlpha(100), borderRadius: BorderRadius.circular(2))),
-                                              ],
-                                            )
-                                          : const SizedBox.shrink(),
+                                      child: Center(
+                                        child: Text(
+                                          label,
+                                          style: TextStyle(
+                                            color: isSelected ? Colors.black : Colors.white70,
+                                            fontSize: 16,
+                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -367,9 +469,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   // ── Language ──
                   _SettingsCard(
                     child: GestureDetector(
-                      onTap: () {
-                        // TODO: language picker
-                      },
+                      onTap: _showLanguagePicker,
                       child: Row(
                         children: [
                           Expanded(
@@ -401,84 +501,65 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+                  const SizedBox(height: 24),
 
-      // ── Fixed Bottom Buttons ──
-      bottomSheet: Container(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-            colors: [
-              bgBlack,
-              bgBlack,
-              bgBlack.withAlpha(220),
-              bgBlack.withAlpha(0),
-            ],
-            stops: const [0.0, 0.7, 0.9, 1.0],
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // TEST VOICE
-            Semantics(
-              label: 'Test Voice',
-              button: true,
-              child: ElevatedButton(
-                onPressed: _testVoice,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryAmber,
-                  foregroundColor: Colors.black,
-                  minimumSize: const Size(double.infinity, 80),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 10,
-                  shadowColor: primaryAmber.withAlpha(76),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.play_arrow_rounded, size: 32),
-                    SizedBox(width: 8),
-                    Text(
-                      'TEST VOICE',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                  // ── Bottom Actions (inline, no bottomSheet) ──
+                  // TEST VOICE (compact)
+                  Semantics(
+                    label: 'Test Voice',
+                    button: true,
+                    child: ElevatedButton(
+                      onPressed: _testVoice,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryAmber,
+                        foregroundColor: Colors.black,
+                        minimumSize: const Size(double.infinity, 52),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 6,
+                        shadowColor: primaryAmber.withAlpha(76),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.play_arrow_rounded, size: 24),
+                          SizedBox(width: 8),
+                          Text(
+                            'TEST VOICE',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            // RESET
-            Semantics(
-              label: 'Reset Settings to Defaults',
-              button: true,
-              child: OutlinedButton(
-                onPressed: _showResetDialog,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.redAccent,
-                  minimumSize: const Size(double.infinity, 80),
-                  side: BorderSide(color: Colors.white.withAlpha(50)),
-                  backgroundColor: surface.withAlpha(128),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.restart_alt_rounded, size: 28),
-                    SizedBox(width: 8),
-                    Text(
-                      'RESET TO DEFAULTS',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                  ),
+                  const SizedBox(height: 10),
+                  // RESET (compact)
+                  Semantics(
+                    label: 'Reset Settings to Defaults',
+                    button: true,
+                    child: OutlinedButton(
+                      onPressed: _showResetDialog,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.redAccent,
+                        minimumSize: const Size(double.infinity, 52),
+                        side: BorderSide(color: Colors.white.withAlpha(30)),
+                        backgroundColor: Colors.white.withAlpha(8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.restart_alt_rounded, size: 22),
+                          SizedBox(width: 8),
+                          Text(
+                            'RESET TO DEFAULTS',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
               ),
             ),
           ],
@@ -488,7 +569,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
-// ─── Reusable Card ───
+// ─── Reusable Card (translucent) ───
 class _SettingsCard extends StatelessWidget {
   final Widget child;
   const _SettingsCard({required this.child});
@@ -499,12 +580,9 @@ class _SettingsCard extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 88),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF121212),
+        color: Colors.white.withAlpha(8),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withAlpha(25)),
-        boxShadow: [
-          BoxShadow(color: const Color(0xFFFFC107).withAlpha(12), blurRadius: 20),
-        ],
+        border: Border.all(color: Colors.white.withAlpha(18)),
       ),
       child: child,
     );
@@ -711,7 +789,7 @@ class _ResetConfirmationDialog extends ConsumerWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryAmber,
                   foregroundColor: Colors.black,
-                  minimumSize: const Size(double.infinity, 88),
+                  minimumSize: const Size(double.infinity, 72),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 child: Column(
@@ -740,7 +818,7 @@ class _ResetConfirmationDialog extends ConsumerWidget {
                 onPressed: () => Navigator.of(context).pop(),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 88),
+                  minimumSize: const Size(double.infinity, 72),
                   side: BorderSide(color: Colors.white.withAlpha(76), width: 3),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),

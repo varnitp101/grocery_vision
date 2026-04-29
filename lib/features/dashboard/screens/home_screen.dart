@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../scanner/screens/scanner_screen.dart';
 import 'dashboard_screen.dart';
@@ -8,6 +9,13 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final photoUrl = user?.photoURL;
+    final displayName = user?.displayName ?? 'User';
+    final initials = displayName.isNotEmpty
+        ? displayName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+        : 'U';
+
     return Scaffold(
       backgroundColor: AppTheme.darkNavy,
       body: SafeArea(
@@ -42,14 +50,49 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
+                  // Profile avatar — taps to Profile tab (index 3)
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => const DashboardScreen(initialIndex: 3)),
+                      );
+                    },
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.primaryAmber.withAlpha(80), width: 2),
+                      ),
+                      child: ClipOval(
+                        child: photoUrl != null && photoUrl.isNotEmpty
+                            ? Image.network(
+                                photoUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, e, s) => Center(
+                                  child: Text(
+                                    initials,
+                                    style: const TextStyle(
+                                      color: AppTheme.primaryAmber,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : Center(
+                                child: Text(
+                                  initials,
+                                  style: const TextStyle(
+                                    color: AppTheme.primaryAmber,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                      ),
                     ),
-                    child: const Icon(Icons.person, color: Colors.white70),
                   ),
                 ],
               ),
@@ -126,46 +169,93 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-              // My Cart Box
+              // Bottom: Cart + History side by side
               Expanded(
                 flex: 1,
-                child: Semantics(
-                  label: 'Go to Cart',
-                  button: true,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => const DashboardScreen(initialIndex: 1)),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0F2042),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.shopping_cart,
-                            color: AppTheme.primaryAmber,
-                            size: 32,
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            'My Cart',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                child: Row(
+                  children: [
+                    // My Cart
+                    Expanded(
+                      child: Semantics(
+                        label: 'Go to Cart',
+                        button: true,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => const DashboardScreen(initialIndex: 2)),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F2042),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.shopping_cart,
+                                  color: AppTheme.primaryAmber,
+                                  size: 28,
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'My Cart',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    // History
+                    Expanded(
+                      child: Semantics(
+                        label: 'Go to History',
+                        button: true,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => const DashboardScreen(initialIndex: 1)),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F2042),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.history_rounded,
+                                  color: AppTheme.primaryAmber,
+                                  size: 28,
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'History',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

@@ -1,11 +1,17 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../models/product_model.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final Product product;
+  final Uint8List? capturedImage;
 
-  const ProductDetailsScreen({super.key, required this.product});
+  const ProductDetailsScreen({
+    super.key,
+    required this.product,
+    this.capturedImage,
+  });
 
   @override
   State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
@@ -82,6 +88,27 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
+                  // Captured Product Image
+                  if (widget.capturedImage != null) ...[
+                    Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withAlpha(25)),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.memory(
+                          widget.capturedImage!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   // Stop Summary button
                   Semantics(
                     label: 'Stop Summary',
@@ -129,7 +156,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       Expanded(
                         child: _StatCard(
                           label: 'Serving Size',
-                          value: widget.product.servingSize.split(' ').first, // Naive split
+                          value: widget.product.servingSize.split(' ').first,
                           subtext: widget.product.servingSize,
                           surfaceNavy: surfaceNavy,
                           primaryAmber: primaryAmber,
@@ -166,7 +193,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     itemBuilder: (context, index) {
                       final key = widget.product.nutritionInfo.keys.elementAt(index);
                       final value = widget.product.nutritionInfo.values.elementAt(index);
-                      // Varying border alpha for that clinical staggered look
                       final alphas = [255, 128, 76, 204];
                       final alpha = alphas[index % alphas.length];
                       

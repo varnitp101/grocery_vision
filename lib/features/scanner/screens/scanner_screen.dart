@@ -71,14 +71,24 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     ref.listen<ScannerState>(scannerControllerProvider, (prev, next) {
       if (_hasNavigated) return;
 
+      // Double haptic when analysis begins
+      if (prev?.phase != ScanPhase.analyzing && next.phase == ScanPhase.analyzing) {
+        HapticFeedback.heavyImpact();
+        Future.delayed(const Duration(milliseconds: 100), () {
+          HapticFeedback.heavyImpact();
+        });
+      }
+
       if (next.phase == ScanPhase.found && next.scannedProduct != null) {
         _hasNavigated = true;
         HapticFeedback.heavyImpact();
         Navigator.of(context)
             .push(
           MaterialPageRoute(
-            builder: (_) =>
-                ProductResultScreen(product: next.scannedProduct!),
+            builder: (_) => ProductResultScreen(
+              product: next.scannedProduct!,
+              capturedImage: next.capturedImageBytes,
+            ),
           ),
         )
             .then((_) {

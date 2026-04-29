@@ -88,8 +88,24 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   }
 
   void setVoiceProfile(VoiceProfile profile) {
-    state = state.copyWith(voiceProfile: profile);
+    // Auto-adjust pitch and rate based on voice profile
+    double pitch;
+    double rate;
+    switch (profile) {
+      case VoiceProfile.male:
+        pitch = 0.3;  // Low/deep voice
+        rate = 1.1;
+      case VoiceProfile.female:
+        pitch = 0.85; // Higher feminine voice
+        rate = 1.2;
+      case VoiceProfile.neutral:
+        pitch = 0.55; // Balanced midrange
+        rate = 1.15;
+    }
+    state = state.copyWith(voiceProfile: profile, voicePitch: pitch, speechRate: rate);
     _prefs.setInt('voiceProfile', profile.index);
+    _prefs.setDouble('voicePitch', pitch);
+    _prefs.setDouble('speechRate', rate);
   }
 
   void updateSpeechRate(double rate) {

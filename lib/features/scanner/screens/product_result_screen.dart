@@ -1,15 +1,22 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../models/product_model.dart';
 import '../../cart/providers/cart_provider.dart';
 import '../../cart/screens/added_to_cart_screen.dart';
+import '../../dashboard/screens/dashboard_screen.dart';
 import 'product_details_screen.dart';
 
 class ProductResultScreen extends ConsumerStatefulWidget {
   final Product product;
+  final Uint8List? capturedImage;
 
-  const ProductResultScreen({super.key, required this.product});
+  const ProductResultScreen({
+    super.key,
+    required this.product,
+    this.capturedImage,
+  });
 
   @override
   ConsumerState<ProductResultScreen> createState() => _ProductResultScreenState();
@@ -79,7 +86,12 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                       button: true,
                       child: GestureDetector(
                         onTap: () {
-                          // TODO: History screen
+                          _tts.stop();
+                          // Navigate to dashboard History tab (index 1)
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => const DashboardScreen(initialIndex: 1)),
+                            (route) => false,
+                          );
                         },
                         child: Container(
                           padding: const EdgeInsets.all(12),
@@ -120,10 +132,34 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.all(24.0),
-                              child: Image.network(
-                                widget.product.imageUrl,
-                                fit: BoxFit.contain,
-                                errorBuilder: (ctx, error, stackTrace) => const Icon(Icons.image_not_supported, size: 100, color: Colors.white54),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: widget.capturedImage != null
+                                    ? Image.memory(
+                                        widget.capturedImage!,
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                      )
+                                    : widget.product.imageUrl.isNotEmpty
+                                        ? Image.network(
+                                            widget.product.imageUrl,
+                                            fit: BoxFit.contain,
+                                            errorBuilder: (ctx, error, stackTrace) => const Icon(
+                                              Icons.image_not_supported,
+                                              size: 100,
+                                              color: Colors.white54,
+                                            ),
+                                          )
+                                        : Container(
+                                            color: navyDeep.withAlpha(100),
+                                            child: const Center(
+                                              child: Icon(
+                                                Icons.camera_alt_rounded,
+                                                size: 80,
+                                                color: Colors.white24,
+                                              ),
+                                            ),
+                                          ),
                               ),
                             ),
                           ),
@@ -241,7 +277,12 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                           onTap: () {
                             _tts.stop();
                             Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: widget.product)),
+                              MaterialPageRoute(
+                                builder: (_) => ProductDetailsScreen(
+                                  product: widget.product,
+                                  capturedImage: widget.capturedImage,
+                                ),
+                              ),
                             );
                           },
                         ),
