@@ -28,7 +28,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
   Future<void> _announceDetails() async {
     final String announcement = 'Detailed Product View for ${widget.product.name}. '
-        '${widget.product.honestTake != null ? "Gemini's Take: ${widget.product.honestTake}. " : ""}'
+        '${widget.product.honestTake != null ? "Web Knowledge: ${widget.product.honestTake}. " : ""}'
         '${widget.product.isFood ? "Contains allergens: ${widget.product.allergens.join(', ')}. " : ""}'
         '${widget.product.isFood ? "Ingredients: ${widget.product.ingredients}." : ""}';
     await _tts.speak(announcement);
@@ -142,57 +142,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // BRUTALLY HONEST TAKE (New Section)
-                  if (widget.product.honestTake != null && widget.product.honestTake!.isNotEmpty) ...[
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            primaryAmber.withAlpha(50),
-                            surfaceNavy,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: primaryAmber.withAlpha(100), width: 2),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.psychology_outlined, color: primaryAmber, size: 28),
-                              const SizedBox(width: 12),
-                              Text(
-                                'GEMINI\'S HONEST TAKE',
-                                style: TextStyle(
-                                  color: primaryAmber,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            widget.product.honestTake!,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              height: 1.4,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                  
+
                   // Top Stats (Dynamic)
                   Row(
                     children: [
@@ -231,16 +181,35 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   
                   // Nutrition Facts Grid (Only if food and info exists)
                   if (widget.product.isFood && widget.product.nutritionInfo.isNotEmpty) ...[
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4.0),
-                      child: Text(
-                        'NUTRITION FACTS',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2.0,
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          const Text(
+                            'NUTRITION FACTS',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                          if (widget.product.servingSize != 'N/A' && widget.product.servingSize.isNotEmpty)
+                            Expanded(
+                              child: Text(
+                                widget.product.servingSize,
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  color: primaryAmber,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -372,6 +341,57 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               fontSize: 28,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 1.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                  
+                  // WEB KNOWLEDGE (Moved Section)
+                  if (widget.product.honestTake != null && widget.product.honestTake!.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            primaryAmber.withAlpha(50),
+                            surfaceNavy,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: primaryAmber.withAlpha(100), width: 2),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.language_rounded, color: primaryAmber, size: 28),
+                              const SizedBox(width: 12),
+                              Text(
+                                'WEB KNOWLEDGE',
+                                style: TextStyle(
+                                  color: primaryAmber,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            widget.product.honestTake!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                              fontStyle: FontStyle.italic,
                             ),
                           ),
                         ],

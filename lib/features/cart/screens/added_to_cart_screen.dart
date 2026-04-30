@@ -70,9 +70,10 @@ class _AddedToCartScreenState extends ConsumerState<AddedToCartScreen> {
               // Main Card
               Expanded(
                 child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
@@ -171,6 +172,7 @@ class _AddedToCartScreenState extends ConsumerState<AddedToCartScreen> {
                     ],
                   ),
                 ),
+                ),
               ),
               
               // Actions
@@ -184,7 +186,7 @@ class _AddedToCartScreenState extends ConsumerState<AddedToCartScreen> {
                         _tts.stop();
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(
-                            builder: (_) => const DashboardScreen(initialIndex: 1), // 1 is Cart
+                            builder: (_) => const DashboardScreen(initialIndex: 2), // 2 is Cart
                           ),
                           (route) => false, // Clear entirely so we drop back to dashboard
                         );
