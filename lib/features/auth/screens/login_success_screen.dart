@@ -20,7 +20,7 @@ class LoginSuccessScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Checkmark
+
                     Container(
                       width: 128,
                       height: 128,
@@ -36,8 +36,8 @@ class LoginSuccessScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 48),
-                    
-                    // Text
+
+
                     const Text(
                       'LOGIN\nSUCCESSFUL',
                       textAlign: TextAlign.center,
@@ -63,13 +63,13 @@ class LoginSuccessScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
-            // Bottom Action Area
+
+
             Container(
               padding: EdgeInsets.only(
-                left: 24, 
-                right: 24, 
-                top: 24, 
+                left: 24,
+                right: 24,
+                top: 24,
                 bottom: 24 + MediaQuery.of(context).padding.bottom
               ),
               decoration: const BoxDecoration(
@@ -80,7 +80,7 @@ class LoginSuccessScreen extends StatelessWidget {
                 label: 'Enter App',
                 child: SizedBox(
                   width: double.infinity,
-                  height: 112, // Really big touch area as per design
+                  height: 112,
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pushReplacement(

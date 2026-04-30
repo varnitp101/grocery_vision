@@ -28,7 +28,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => const PermissionsScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(0.0, 1.0); // Start from bottom
+          const begin = Offset(0.0, 1.0);
           const end = Offset.zero;
           const curve = Curves.easeInOutBack;
 
@@ -70,11 +70,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _simulateHaptics() async {
-    // Speak custom audio
+
     await _flutterTts.setSpeechRate(0.5);
     _flutterTts.speak("Hey there");
-    
-    // Generate an escalating vibration pattern as a simulation
+
+
     HapticFeedback.lightImpact();
     await Future.delayed(const Duration(milliseconds: 200));
     HapticFeedback.mediumImpact();
@@ -84,14 +84,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Forced dark mode matching requested UI
+
     return Scaffold(
-      backgroundColor: AppTheme.darkNavy.withValues(alpha: 0.95), // very dark background
+      backgroundColor: AppTheme.darkNavy.withValues(alpha: 0.95),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            // Header / Progress
+
             Padding(
               padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 8),
               child: Row(
@@ -119,11 +119,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            // Page View Content
+
             Expanded(
               child: PageView(
                 controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(), // Only navigate with buttons
+                physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (index) {
                   setState(() => _currentPage = index);
                   if (index == 1) {
@@ -159,7 +159,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // --- PAGE 1: AI Vision Assistant ---
+
   Widget _buildPage1() {
     return Column(
       children: [
@@ -234,7 +234,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // --- PAGE 2: Audio & Haptics ---
+
   Widget _buildPage2() {
     return Column(
       children: [
@@ -312,7 +312,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // --- PAGE 3: Offline Mode ---
+
   Widget _buildPage3() {
     return Column(
       children: [
@@ -427,7 +427,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       height: MediaQuery.of(context).size.height * 0.25,
       child: Row(
         children: [
-          // Left Button
+
           Expanded(
             child: Semantics(
               button: true,
@@ -467,8 +467,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-          Container(width: 4, color: Colors.black), // Divider
-          // Right Button
+          Container(width: 4, color: Colors.black),
+
           Expanded(
             child: Semantics(
               button: true,

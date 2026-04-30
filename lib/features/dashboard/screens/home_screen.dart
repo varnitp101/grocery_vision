@@ -24,7 +24,7 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -50,7 +50,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // Profile avatar — taps to Profile tab (index 3)
+
                   GestureDetector(
                     onTap: () {
                       Navigator.of(context).pushReplacement(
@@ -97,8 +97,8 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 32),
-              
-              // Big Amber Card — primary scan action
+
+
               Expanded(
                 flex: 3,
                 child: GestureDetector(
@@ -171,12 +171,12 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Bottom: Cart + History side by side
+
               Expanded(
                 flex: 1,
                 child: Row(
                   children: [
-                    // My Cart
+
                     Expanded(
                       child: Semantics(
                         label: 'Go to Cart',
@@ -216,7 +216,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // History
+
                     Expanded(
                       child: Semantics(
                         label: 'Go to History',

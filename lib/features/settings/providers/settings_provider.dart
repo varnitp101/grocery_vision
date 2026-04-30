@@ -46,14 +46,14 @@ class AppSettings {
     );
   }
 
-  /// Returns pitch as a human-readable label.
+
   String get pitchLabel {
     if (voicePitch <= 0.33) return 'Low';
     if (voicePitch <= 0.66) return 'Medium';
     return 'High';
   }
 
-  /// Returns vibration intensity as a 0-1 double (for persistence).
+
   double get vibrationIntensity {
     switch (vibrationLevel) {
       case VibrationLevel.low:
@@ -88,18 +88,18 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   }
 
   void setVoiceProfile(VoiceProfile profile) {
-    // Auto-adjust pitch and rate based on voice profile
+
     double pitch;
     double rate;
     switch (profile) {
       case VoiceProfile.male:
-        pitch = 0.3;  // Low/deep voice
+        pitch = 0.3;
         rate = 1.1;
       case VoiceProfile.female:
-        pitch = 0.85; // Higher feminine voice
+        pitch = 0.85;
         rate = 1.2;
       case VoiceProfile.neutral:
-        pitch = 0.55; // Balanced midrange
+        pitch = 0.55;
         rate = 1.15;
     }
     state = state.copyWith(voiceProfile: profile, voicePitch: pitch, speechRate: rate);

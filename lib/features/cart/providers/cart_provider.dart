@@ -8,13 +8,13 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
 
   final FirestoreService _firestore = FirestoreService();
 
-  /// Load cart from Firestore on app start.
+
   Future<void> loadFromFirestore() async {
     try {
       final items = await _firestore.loadCart();
       state = items;
     } catch (_) {
-      // Silently fail — cart will just be empty
+
     }
   }
 
@@ -56,12 +56,12 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     return state.fold(0, (sum, item) => sum + item.quantity);
   }
 
-  /// Sync cart state to Firestore in background.
+
   Future<void> _syncToFirestore() async {
     try {
       await _firestore.saveCart(state);
     } catch (_) {
-      // Silently fail — local state is still correct
+
     }
   }
 }

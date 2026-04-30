@@ -22,7 +22,7 @@ class CartScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header Config
+
             Container(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
               decoration: BoxDecoration(
@@ -42,7 +42,7 @@ class CartScreen extends ConsumerWidget {
               ),
             ),
 
-            // Top Total Card
+
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -90,7 +90,7 @@ class CartScreen extends ConsumerWidget {
               ),
             ),
 
-            // Cart Items List
+
             Expanded(
               child: cartItems.isEmpty
                   ? Center(
@@ -112,7 +112,7 @@ class CartScreen extends ConsumerWidget {
                       ),
                     )
                   : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 120), // Padding bottom for fixed Add bar
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 120),
                       itemCount: cartItems.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 16),
                       itemBuilder: (context, index) {
@@ -140,9 +140,9 @@ class CartScreen extends ConsumerWidget {
         ),
         child: ElevatedButton(
           onPressed: () {
-            // TODO: Route to barcode scan or search? Maybe just back to the Dashboard's Scanner tab.
+
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const DashboardScreen(initialIndex: 0)), // 0 is Home/Scanner
+              MaterialPageRoute(builder: (_) => const DashboardScreen(initialIndex: 0)),
             );
           },
           style: ElevatedButton.styleFrom(

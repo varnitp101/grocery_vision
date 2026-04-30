@@ -57,7 +57,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
         bottom: false,
         child: Column(
           children: [
-            // Header
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               child: Column(
@@ -110,7 +110,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
               ),
             ),
 
-            // Main Content
+
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -158,7 +158,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
               ),
             ),
 
-            // Footer Button
+
             Semantics(
               button: true,
               label: 'Continue to login',

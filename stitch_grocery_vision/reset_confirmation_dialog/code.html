@@ -4,16 +4,16 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Reset Confirmation Dialog</title>
-<!-- Google Fonts -->
+
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;700;800&amp;display=swap" rel="stylesheet"/>
-<!-- Material Symbols -->
+
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Tailwind CSS -->
+
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Tailwind Configuration -->
+
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -29,21 +29,21 @@
                     },
                     borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
                     spacing: {
-                        '88': '88px', // Specific height requirement
+                        '88': '88px',
                     }
                 },
             },
         }
     </script>
 <style>
-        /* Custom utilities for the specific industrial look */
+
         .text-shadow-sm {
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
         .modal-shadow {
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
         }
-        /* Ensure touch targets are distinct */
+
         .touch-target-xl {
             min-height: 88px;
         }
@@ -55,17 +55,17 @@
   </style>
   </head>
 <body class="bg-background-light dark:bg-background-dark font-display antialiased overflow-hidden selection:bg-primary selection:text-black">
-<!-- Screen Container -->
+
 <div class="relative h-screen w-full flex flex-col items-center justify-center overflow-hidden">
-<!-- Blurred Background Content (Simulating the underlying app) -->
+
 <div aria-hidden="true" class="absolute inset-0 w-full h-full flex flex-col opacity-30 dark:opacity-20 blur-[6px] pointer-events-none">
-<!-- Simulated Header -->
+
 <div class="flex items-center justify-between p-6 border-b border-gray-300 dark:border-gray-700">
 <span class="material-symbols-outlined text-3xl dark:text-white">arrow_back</span>
 <h2 class="text-xl font-bold dark:text-white">Accessibility</h2>
 <span class="material-symbols-outlined text-3xl dark:text-white">help</span>
 </div>
-<!-- Simulated List Items -->
+
 <div class="flex-1 p-4 space-y-4">
 <div class="h-20 w-full bg-white dark:bg-[#1a1a1a] rounded-xl flex items-center px-4 shadow-sm">
 <div class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
@@ -79,23 +79,23 @@
 <div class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
 <div class="ml-4 h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
 </div>
-<!-- Simulated Image Card -->
+
 <div class="h-40 w-full bg-gray-300 dark:bg-gray-800 rounded-xl relative overflow-hidden">
 <div class="absolute inset-0 bg-gradient-to-r from-gray-400 to-gray-300 dark:from-gray-800 dark:to-gray-700"></div>
 </div>
 </div>
 </div>
-<!-- Dark Backdrop Overlay -->
+
 <div class="absolute inset-0 bg-black/80 backdrop-blur-sm z-40"></div>
-<!-- Modal Content -->
-<!-- Role alertdialog for accessibility -->
+
+
 <div aria-describedby="modal-desc" aria-labelledby="modal-title" aria-modal="true" class="relative z-50 w-full max-w-[90%] md:max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200 ease-out" role="alertdialog">
-<!-- High Contrast Container -->
+
 <div class="bg-black border-[6px] border-primary rounded-xl modal-shadow flex flex-col p-6 md:p-8 relative overflow-hidden">
-<!-- Decorative Industrial Stripes Pattern (Subtle texture on black) -->
+
 <div class="absolute top-0 right-0 w-32 h-32 opacity-10 pointer-events-none" style="background-image: repeating-linear-gradient(45deg, #ffaa00 0, #ffaa00 2px, transparent 0, transparent 50%); background-size: 10px 10px;">
 </div>
-<!-- Warning Icon -->
+
 <div class="flex justify-center mb-6">
 <div class="h-20 w-20 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary">
 <span class="material-symbols-outlined text-primary text-5xl" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;">
@@ -103,44 +103,44 @@
                         </span>
 </div>
 </div>
-<!-- Headline -->
+
 <h1 class="text-white text-center text-3xl md:text-4xl font-extrabold leading-none tracking-tight uppercase mb-4 text-shadow-sm" id="modal-title">
                     Reset All <br/> <span class="text-primary">Settings?</span>
 </h1>
-<!-- Divider -->
+
 <div class="w-16 h-1.5 bg-primary/30 mx-auto rounded-full mb-5"></div>
-<!-- Body Text -->
+
 <p class="text-white/90 text-center text-lg md:text-xl font-normal leading-relaxed mb-10 px-2" id="modal-desc">
                     This will return all voice and vibration settings to normal.
                 </p>
-<!-- Action Buttons Stack -->
+
 <div class="flex flex-col gap-4 w-full">
-<!-- Primary Action: YES, RESET -->
-<!-- Height constrained to 88px as requested for accessibility -->
+
+
 <button class="group relative w-full h-88 bg-primary rounded-lg flex items-center justify-center overflow-hidden transition-transform active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-black">
-<!-- Button inner texture/highlight -->
+
 <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
 <div class="flex flex-col items-center justify-center relative z-10">
 <span class="text-black text-2xl font-bold tracking-widest uppercase">Yes, Reset</span>
-<!-- Subtext for screen readers or extra clarity visually -->
+
 <span class="text-black/60 text-xs font-semibold tracking-wider mt-0.5">Confirm Action</span>
 </div>
-<!-- Icon indicator -->
+
 <span class="material-symbols-outlined absolute right-6 text-black/40 text-3xl group-hover:text-black/70 transition-colors">
                             check_circle
                         </span>
 </button>
-<!-- Secondary Action: CANCEL -->
-<!-- Height constrained to 88px as requested -->
+
+
 <button class="w-full h-88 bg-transparent border-[3px] border-white/30 text-white rounded-lg flex items-center justify-center hover:bg-white/5 hover:border-white transition-colors active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-black">
 <span class="text-xl font-bold tracking-widest uppercase">Cancel</span>
 </button>
 </div>
-<!-- Bottom decorative element -->
+
 <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
 </div>
 </div>
-<!-- Safe Area Spacer for iOS Home Indicator -->
+
 <div class="h-8 w-full shrink-0"></div>
 </div>
 </body></html>

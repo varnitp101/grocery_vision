@@ -24,7 +24,7 @@ class AuthController {
 
       final googleUser = await _googleSignIn.authenticate();
       final googleAuth = googleUser.authentication;
-      
+
       final authZ = await googleUser.authorizationClient.authorizeScopes(['email', 'profile']);
 
       final AuthCredential credential = GoogleAuthProvider.credential(

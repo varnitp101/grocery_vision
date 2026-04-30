@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../providers/settings_provider.dart';
 
-// Top 20 Indian languages + English
+
 const List<String> _supportedLanguages = [
   'English',
   'Hindi',
@@ -81,7 +81,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle
+
               Container(
                 margin: const EdgeInsets.only(top: 12),
                 width: 40,
@@ -167,7 +167,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+
             Container(
               padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
               decoration: BoxDecoration(
@@ -202,12 +202,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
 
-            // Scrollable Content
+
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
                 children: [
-                  // ── AI Voice Assistant Toggle ──
+
                   _SettingsCard(
                     child: Row(
                       children: [
@@ -273,7 +273,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Voice Profile ──
+
                   _SettingsCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,7 +334,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Speech Rate ──
+
                   _SettingsCard(
                     child: Column(
                       children: [
@@ -369,7 +369,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Voice Pitch ──
+
                   _SettingsCard(
                     child: Column(
                       children: [
@@ -404,7 +404,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Vibration Intensity ── (with text labels always visible)
+
                   _SettingsCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,7 +466,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Language ──
+
                   _SettingsCard(
                     child: GestureDetector(
                       onTap: _showLanguagePicker,
@@ -503,8 +503,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // ── Bottom Actions (inline, no bottomSheet) ──
-                  // TEST VOICE (compact)
+
+
                   Semantics(
                     label: 'Test Voice',
                     button: true,
@@ -532,7 +532,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // RESET (compact)
+
                   Semantics(
                     label: 'Reset Settings to Defaults',
                     button: true,
@@ -569,7 +569,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
-// ─── Reusable Card (translucent) ───
+
 class _SettingsCard extends StatelessWidget {
   final Widget child;
   const _SettingsCard({required this.child});
@@ -589,7 +589,7 @@ class _SettingsCard extends StatelessWidget {
   }
 }
 
-// ─── Custom Slider ───
+
 class _CustomSlider extends StatelessWidget {
   final double value;
   final double min;
@@ -618,7 +618,7 @@ class _CustomSlider extends StatelessWidget {
           return Stack(
             alignment: Alignment.centerLeft,
             children: [
-              // Background track
+
               Container(
                 height: 24,
                 decoration: BoxDecoration(
@@ -626,7 +626,7 @@ class _CustomSlider extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              // Filled track
+
               Container(
                 height: 24,
                 width: thumbPosition.clamp(0, trackWidth),
@@ -638,7 +638,7 @@ class _CustomSlider extends StatelessWidget {
                   ),
                 ),
               ),
-              // Thumb
+
               Positioned(
                 left: (thumbPosition - 20).clamp(0, trackWidth - 40),
                 child: Container(
@@ -660,7 +660,7 @@ class _CustomSlider extends StatelessWidget {
                   ),
                 ),
               ),
-              // Invisible native slider on top for interaction
+
               Positioned.fill(
                 child: SliderTheme(
                   data: SliderThemeData(
@@ -687,7 +687,7 @@ class _CustomSlider extends StatelessWidget {
   }
 }
 
-// ─── Reset Confirmation Dialog ───
+
 class _ResetConfirmationDialog extends ConsumerWidget {
   const _ResetConfirmationDialog();
 
@@ -711,7 +711,7 @@ class _ResetConfirmationDialog extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Warning icon
+
             Container(
               height: 80,
               width: 80,
@@ -724,7 +724,7 @@ class _ResetConfirmationDialog extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
 
-            // Title
+
             const Text(
               'Reset All',
               textAlign: TextAlign.center,
@@ -749,7 +749,7 @@ class _ResetConfirmationDialog extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            // Divider
+
             Container(
               width: 64,
               height: 4,
@@ -760,7 +760,7 @@ class _ResetConfirmationDialog extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
-            // Body text
+
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: Text(
@@ -776,7 +776,7 @@ class _ResetConfirmationDialog extends ConsumerWidget {
             ),
             const SizedBox(height: 32),
 
-            // YES, RESET button
+
             Semantics(
               label: 'Yes, Reset. Confirm Action',
               button: true,
@@ -810,7 +810,7 @@ class _ResetConfirmationDialog extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            // CANCEL button
+
             Semantics(
               label: 'Cancel',
               button: true,

@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/product_model.dart';
 import '../models/cart_item.dart';
 
-/// Handles all Firestore operations for cart persistence and scan history.
-/// Data is scoped per authenticated user: users/{uid}/cart and users/{uid}/scanHistory.
+
+
 class FirestoreService {
   static final FirestoreService _instance = FirestoreService._internal();
   factory FirestoreService() => _instance;
@@ -14,9 +14,9 @@ class FirestoreService {
 
   String? get _uid => FirebaseAuth.instance.currentUser?.uid;
 
-  // ─── Cart Operations ───────────────────────────────────────────────
 
-  /// Save the entire cart to Firestore (overwrites).
+
+
   Future<void> saveCart(List<CartItem> items) async {
     final uid = _uid;
     if (uid == null) return;
@@ -24,13 +24,13 @@ class FirestoreService {
     final batch = _db.batch();
     final cartRef = _db.collection('users').doc(uid).collection('cart');
 
-    // Delete all existing cart items first
+
     final existing = await cartRef.get();
     for (final doc in existing.docs) {
       batch.delete(doc.reference);
     }
 
-    // Add all current items
+
     for (final item in items) {
       final docRef = cartRef.doc(item.product.id);
       batch.set(docRef, {
@@ -43,7 +43,7 @@ class FirestoreService {
     await batch.commit();
   }
 
-  /// Load cart from Firestore.
+
   Future<List<CartItem>> loadCart() async {
     final uid = _uid;
     if (uid == null) return [];
@@ -62,9 +62,9 @@ class FirestoreService {
     }).toList();
   }
 
-  // ─── Scan History Operations ───────────────────────────────────────
 
-  /// Log a successful scan to history.
+
+
   Future<void> logScan(Product product) async {
     final uid = _uid;
     if (uid == null) return;
@@ -79,7 +79,7 @@ class FirestoreService {
     });
   }
 
-  /// Get recent scan history (last 20 scans).
+
   Future<List<Map<String, dynamic>>> getRecentScans() async {
     final uid = _uid;
     if (uid == null) return [];

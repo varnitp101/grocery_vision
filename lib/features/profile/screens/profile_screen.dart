@@ -11,7 +11,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = FirebaseAuth.instance.currentUser;
     final themeMode = ref.watch(themeProvider);
-    final isDark = themeMode == ThemeMode.dark || 
+    final isDark = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     final displayName = user?.displayName ?? 'User';
@@ -29,7 +29,7 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             const SizedBox(height: 16),
 
-            // Avatar & Name
+
             Center(
               child: Column(
                 children: [
@@ -77,7 +77,7 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Member since badge
+
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
@@ -99,7 +99,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 32),
 
-            // Appearance Section
+
             _SectionTitle(title: 'APPEARANCE', isDark: isDark),
             const SizedBox(height: 8),
             _ProfileCard(
@@ -120,7 +120,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // Account Section
+
             _SectionTitle(title: 'ACCOUNT', isDark: isDark),
             const SizedBox(height: 8),
             _ProfileCard(
@@ -150,7 +150,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // App Section
+
             _SectionTitle(title: 'APP', isDark: isDark),
             const SizedBox(height: 8),
             _ProfileCard(
@@ -199,7 +199,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // Danger Zone
+
             _SectionTitle(title: 'DANGER ZONE', isDark: isDark, color: Colors.redAccent),
             const SizedBox(height: 8),
             _ProfileCard(
@@ -227,7 +227,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 40),
 
-            // App version
+
             Center(
               child: Text(
                 'Grocery Vision v1.0.0',
@@ -301,7 +301,7 @@ class ProfileScreen extends ConsumerWidget {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    // Google sign-in users can't change password
+
     final isGoogleUser = user.providerData.any((p) => p.providerId == 'google.com');
     if (isGoogleUser) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -406,7 +406,7 @@ class ProfileScreen extends ConsumerWidget {
               await FirebaseAuth.instance.signOut();
               if (ctx.mounted) {
                 Navigator.of(ctx).pop();
-                // Go to login screen
+
                 Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
               }
             },
@@ -470,7 +470,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-// --- Internal Widgets ---
+
 
 class _InitialsAvatar extends StatelessWidget {
   final String initials;

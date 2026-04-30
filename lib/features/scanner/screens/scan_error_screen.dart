@@ -50,7 +50,7 @@ class _ScanErrorScreenState extends State<ScanErrorScreen>
       body: SafeArea(
         child: Column(
           children: [
-            // Top: error info
+
             Expanded(
               flex: 55,
               child: Center(
@@ -112,7 +112,7 @@ class _ScanErrorScreenState extends State<ScanErrorScreen>
               ),
             ),
 
-            // Bottom: Retry button (single tap, clear instruction)
+
             Expanded(
               flex: 45,
               child: Padding(

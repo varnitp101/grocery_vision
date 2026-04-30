@@ -31,15 +31,15 @@ class Product {
     this.honestTake,
   });
 
-  /// Parse from Gemini's structured JSON response
+
   factory Product.fromGeminiJson(Map<String, dynamic> json) {
-    // Parse nutrition info — could be Map<String, String> or Map<String, dynamic>
+
     final rawNutrition = json['nutritionInfo'] as Map<String, dynamic>? ?? {};
     final nutritionInfo = rawNutrition.map(
       (key, value) => MapEntry(key, value.toString()),
     );
 
-    // Parse allergens — could be List<String> or List<dynamic>
+
     final rawAllergens = json['allergens'] as List<dynamic>? ?? [];
     final allergens = rawAllergens.map((e) => e.toString()).toList();
 
@@ -61,7 +61,7 @@ class Product {
     );
   }
 
-  /// Convert to Firestore document
+
   Map<String, dynamic> toFirestore() {
     return {
       'id': id,
@@ -81,7 +81,7 @@ class Product {
     };
   }
 
-  /// Parse from Firestore document
+
   factory Product.fromFirestore(Map<String, dynamic> json) {
     final rawNutrition = json['nutritionInfo'] as Map<String, dynamic>? ?? {};
     final nutritionInfo = rawNutrition.map(
@@ -109,7 +109,7 @@ class Product {
   }
 }
 
-// Dummy mock product for testing
+
 const mockWholeMilk = Product(
   id: 'mock_milk_01',
   name: 'Whole Milk',

@@ -82,7 +82,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
@@ -118,7 +118,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               ),
             ),
 
-            // Scrollable Form
+
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -151,7 +151,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Inputs Container
+
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -203,7 +203,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 16),
                     Row(
                       children: [
@@ -223,7 +223,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               ),
             ),
 
-            // Footer
+
             Container(
               padding: const EdgeInsets.all(24),
               color: bgColor,
@@ -265,8 +265,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Placeholder exact material icon instead of flutter_svg currently
-                          Icon(Icons.g_mobiledata, color: Colors.black, size: 40), 
+
+                          Icon(Icons.g_mobiledata, color: Colors.black, size: 40),
                           SizedBox(width: 8),
                           Text(
                             'Sign in with Google',

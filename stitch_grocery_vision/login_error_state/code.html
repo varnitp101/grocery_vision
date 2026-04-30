@@ -4,11 +4,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Login Error State</title>
-<!-- Fonts -->
+
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Tailwind CSS -->
+
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script id="tailwind-config">
         tailwind.config = {
@@ -35,28 +35,25 @@
   </style>
   </head>
 <body class="bg-background-dark min-h-screen w-full flex flex-col font-display antialiased overflow-hidden selection:bg-white selection:text-background-dark">
-<!-- Accessibility Announcement (Hidden visually, read by screen readers) -->
+
 <div aria-live="assertive" class="sr-only" role="alert">
         Login failed. Incorrect email or password. Double tap the bottom button to try again.
     </div>
-<!-- Main Content Container -->
+
 <div class="flex-1 flex flex-col p-6 h-full relative z-10">
-<!-- Status Bar Spacer (Simulated) -->
+
 <div class="h-12 w-full shrink-0"></div>
-<!-- Central Warning Module -->
+
 <div class="flex-1 flex flex-col justify-center items-center w-full animate-in fade-in zoom-in duration-300">
-<!-- 
-               Thick white border box for clinical, high-contrast visibility.
-               Using max-w-sm to keep it contained on larger screens but full width on mobile.
-            -->
+
 <div class="w-full max-w-[340px] flex flex-col items-center gap-8 rounded-lg border-[6px] border-white px-6 py-12 bg-background-dark shadow-[0_0_0_1px_rgba(0,0,0,0.5)]">
-<!-- Abstract Alert Icon -->
+
 <div class="flex items-center justify-center">
 <span class="material-symbols-outlined text-white text-6xl" style="font-variation-settings: 'wght' 700, 'FILL' 1;">
                         gpp_maybe
                     </span>
 </div>
-<!-- Typographic Hierarchy -->
+
 <div class="flex flex-col items-center gap-4 text-center">
 <h1 class="text-white text-4xl font-bold leading-[0.9] tracking-tight uppercase">
                         Invalid<br/>Login
@@ -67,15 +64,15 @@
 </div>
 </div>
 </div>
-<!-- Bottom Action Area -->
-<!-- Massive touch target (88px) for accessibility -->
+
+
 <div class="w-full pb-8 pt-4">
 <button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-[88px] bg-white text-background-dark shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] transition-transform active:scale-[0.97] group">
 <span class="text-xl font-bold tracking-widest uppercase group-hover:underline underline-offset-4 decoration-4">Try Again</span>
 </button>
 </div>
 </div>
-<!-- Subtle Background Texture overlay for depth without breaking solid color rule -->
+
 <div class="fixed inset-0 pointer-events-none opacity-5 mix-blend-overlay" data-alt="Subtle dot pattern texture overlay" style="background-image: radial-gradient(circle at center, #ffffff 1px, transparent 1px); background-size: 24px 24px;">
 </div>
 </body></html>

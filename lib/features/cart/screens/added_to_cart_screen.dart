@@ -24,8 +24,8 @@ class _AddedToCartScreenState extends ConsumerState<AddedToCartScreen> {
   }
 
   Future<void> _announceAdded() async {
-    // Note: totalItems might not be immediately updated depending on when this happens,
-    // but reading in initState usually gets the latest if modified right before push.
+
+
     final totalItems = ref.read(cartProvider.notifier).totalItems;
     final String announcement = 'Success. ${widget.product.name} added to cart. '
         'Total items are now $totalItems. Double tap top button to view cart or bottom button to scan more.';
@@ -51,7 +51,7 @@ class _AddedToCartScreenState extends ConsumerState<AddedToCartScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24),
           child: Column(
             children: [
-              // Header
+
               const Padding(
                 padding: EdgeInsets.only(top: 24, bottom: 16),
                 child: Text(
@@ -66,8 +66,8 @@ class _AddedToCartScreenState extends ConsumerState<AddedToCartScreen> {
                   ),
                 ),
               ),
-              
-              // Main Card
+
+
               Expanded(
                 child: Center(
                   child: SingleChildScrollView(
@@ -134,8 +134,8 @@ class _AddedToCartScreenState extends ConsumerState<AddedToCartScreen> {
                         ),
                       ),
                       const SizedBox(height: 48),
-                      
-                      // Summary
+
+
                       Text(
                         'CART SUMMARY',
                         style: TextStyle(
@@ -174,8 +174,8 @@ class _AddedToCartScreenState extends ConsumerState<AddedToCartScreen> {
                 ),
                 ),
               ),
-              
-              // Actions
+
+
               Column(
                 children: [
                   Semantics(
@@ -186,9 +186,9 @@ class _AddedToCartScreenState extends ConsumerState<AddedToCartScreen> {
                         _tts.stop();
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(
-                            builder: (_) => const DashboardScreen(initialIndex: 2), // 2 is Cart
+                            builder: (_) => const DashboardScreen(initialIndex: 2),
                           ),
-                          (route) => false, // Clear entirely so we drop back to dashboard
+                          (route) => false,
                         );
                       },
                       style: ElevatedButton.styleFrom(

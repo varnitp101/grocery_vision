@@ -9,14 +9,14 @@ final scannerControllerProvider = StateNotifierProvider<ScannerControllerNotifie
   return ScannerControllerNotifier();
 });
 
-/// Possible scanner phases
+
 enum ScanPhase {
-  idle,       // Camera live, waiting for user action
-  capturing,  // Taking burst photos (~2 seconds)
-  analyzing,  // Gemini is processing the best image (camera dismissed)
-  found,      // Product identified
-  notFound,   // Product not recognized
-  error,      // Something went wrong
+  idle,
+  capturing,
+  analyzing,
+  found,
+  notFound,
+  error,
 }
 
 class ScannerState {
@@ -25,9 +25,9 @@ class ScannerState {
   final ScanPhase phase;
   final String statusMessage;
   final Product? scannedProduct;
-  /// Progress during capture burst: 0.0 to 1.0
+
   final double captureProgress;
-  /// The best captured image bytes from burst capture
+
   final Uint8List? capturedImageBytes;
 
   ScannerState({
@@ -72,14 +72,14 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
   CameraDescription? _cameraDescription;
 
   Future<void> initializeCamera() async {
-    // If we already have a working controller, skip
+
     if (state.isInitialized &&
         state.controller != null &&
         state.controller!.value.isInitialized) {
       return;
     }
 
-    // Dispose any old controller first
+
     try {
       await state.controller?.dispose();
     } catch (_) {}
@@ -118,25 +118,25 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
     }
   }
 
-  /// Reinitialize camera if it crashed or got disposed.
+
   Future<void> _ensureCameraReady() async {
     final ctrl = state.controller;
     if (ctrl == null || !ctrl.value.isInitialized) {
-      // Force re-create the controller
+
       state = state.copyWith(isInitialized: false);
       await initializeCamera();
     }
   }
 
-  /// Burst-capture 3 photos over ~2 seconds, pick the sharpest one,
-  /// then send it to Gemini for identification.
+
+
   Future<void> captureAndIdentify() async {
     if (_isBusy) return;
 
     _isBusy = true;
 
     try {
-      // Make sure camera is alive before we start
+
       await _ensureCameraReady();
       if (state.controller == null || !state.isInitialized) {
         state = state.copyWith(
@@ -147,7 +147,7 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
         return;
       }
 
-      // Phase 1: Burst capture
+
       state = state.copyWith(
         phase: ScanPhase.capturing,
         statusMessage: 'HOLD STEADY...',
@@ -156,7 +156,7 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
       );
 
       final List<Uint8List> capturedImages = [];
-      // 3 photos with 700ms gaps = ~2.1s total (safer for device cameras)
+
       const int burstCount = 3;
       const Duration burstInterval = Duration(milliseconds: 700);
 
@@ -164,7 +164,7 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
         if (!mounted) break;
 
         try {
-          // Check controller is still valid before each shot
+
           if (state.controller == null || !state.controller!.value.isInitialized) {
             break;
           }
@@ -172,11 +172,11 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
           final bytes = await photo.readAsBytes();
           capturedImages.add(bytes);
         } catch (e) {
-          // Camera may have errored — wait and try again for next shot
+
           await Future.delayed(const Duration(milliseconds: 300));
         }
 
-        // Update progress
+
         state = state.copyWith(
           captureProgress: (i + 1) / burstCount,
         );
@@ -195,19 +195,19 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
         return;
       }
 
-      // Pick best image — larger file = sharper/more detail (JPEG compression)
+
       final Uint8List bestImage = capturedImages.reduce(
         (best, current) => current.lengthInBytes > best.lengthInBytes ? current : best,
       );
 
-      // Phase 2: Analyzing — full-screen overlay replaces camera
+
       state = state.copyWith(
         phase: ScanPhase.analyzing,
         statusMessage: 'AI ANALYZING...',
         capturedImageBytes: bestImage,
       );
 
-      // Send to Gemini
+
       _gemini.initialize();
       final product = await _gemini.identifyProduct(bestImage);
 
@@ -217,7 +217,7 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
           statusMessage: 'PRODUCT FOUND!',
           scannedProduct: product,
         );
-        // Log scan to Firestore history (don't block on this)
+
         _firestore.logScan(product);
       } else {
         state = state.copyWith(
@@ -235,8 +235,8 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
     }
   }
 
-  /// Reset to idle state so user can scan again.
-  /// Also re-initializes camera if it died during the last scan.
+
+
   void resetToIdle() {
     _isBusy = false;
     state = state.copyWith(
@@ -246,7 +246,7 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
       clearImage: true,
       captureProgress: 0.0,
     );
-    // Re-init camera in background if it died
+
     _ensureCameraReady();
   }
 

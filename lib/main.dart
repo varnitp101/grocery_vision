@@ -12,17 +12,17 @@ import 'services/gemini_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize Gemini AI model (pre-warm so first scan is faster)
+
   GeminiService().initialize();
 
   final prefs = await SharedPreferences.getInstance();
 
-  // Check if user is already logged in
+
   final currentUser = FirebaseAuth.instance.currentUser;
 
   runApp(

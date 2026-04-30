@@ -4,16 +4,16 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Reset Success Notification</title>
-<!-- Tailwind CSS -->
+
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Google Fonts -->
+
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
-<!-- Material Symbols -->
+
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Tailwind Config -->
+
 <script>
       tailwind.config = {
         darkMode: "class",
@@ -36,7 +36,7 @@
       }
     </script>
 <style>
-        /* Specific override for material symbols to make them extra bold */
+
         .material-symbols-outlined.extra-bold {
           font-variation-settings:
           'FILL' 1,
@@ -44,8 +44,8 @@
           'GRAD' 0,
           'opsz' 48
         }
-        
-        /* Ensuring full height on mobile viewports */
+
+
         html, body {
             height: 100%;
         }
@@ -57,18 +57,13 @@
   </style>
   </head>
 <body class="bg-background-dark text-white font-display overflow-hidden flex flex-col h-full antialiased selection:bg-primary selection:text-black">
-<!-- 
-      Accessibility Announcement Area: 
-      This is technically hidden visually but structuring the content so screen readers
-      pick it up first or via aria-live regions would be the implementation detail.
-      Here we use semantic HTML structure to guide the flow.
-    -->
+
 <main aria-label="Success. All settings have been returned to default. Double tap the bottom button to return to settings." class="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto px-6 relative">
-<!-- Central Visual Group -->
+
 <div class="flex flex-col items-center justify-center gap-8 mb-16 animate-fade-in">
-<!-- Hero Icon -->
+
 <div class="relative flex items-center justify-center">
-<!-- Outer glow effect for extra contrast/pop without standard shadow -->
+
 <div class="absolute inset-0 bg-primary/20 blur-xl rounded-full transform scale-110"></div>
 <div class="relative w-40 h-40 rounded-full border-[6px] border-primary flex items-center justify-center bg-black z-10">
 <span class="material-symbols-outlined extra-bold text-white text-[80px]">
@@ -76,7 +71,7 @@
                     </span>
 </div>
 </div>
-<!-- Text Content -->
+
 <div class="text-center space-y-2">
 <h1 class="text-6xl font-black tracking-tighter text-white uppercase leading-none">
                     Success
@@ -86,18 +81,18 @@
                 </p>
 </div>
 </div>
-<!-- Decorative Elements for "Unexpected" feel -->
-<!-- Corner accents that act as visual anchors for low vision users to define screen boundaries -->
+
+
 <div class="absolute top-8 left-6 w-4 h-4 border-t-4 border-l-4 border-primary/40 rounded-tl-lg"></div>
 <div class="absolute top-8 right-6 w-4 h-4 border-t-4 border-r-4 border-primary/40 rounded-tr-lg"></div>
 </main>
-<!-- Bottom Action Area -->
+
 <footer class="w-full max-w-md mx-auto px-4 pb-8 pt-4 bg-background-dark z-20">
 <button aria-label="Back to settings" class="w-full bg-primary hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 rounded-xl flex items-center justify-center h-[88px] group ring-offset-2 ring-offset-black focus:outline-none focus:ring-4 focus:ring-white">
 <span class="text-black text-2xl font-black tracking-wider uppercase group-hover:tracking-widest transition-all">
                 Back to Settings
             </span>
-<!-- Icon is hidden from screen readers as text is sufficient -->
+
 <span aria-hidden="true" class="material-symbols-outlined text-black ml-3 text-3xl font-bold">
                 arrow_forward
             </span>

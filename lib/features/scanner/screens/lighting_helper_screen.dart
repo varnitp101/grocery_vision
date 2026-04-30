@@ -19,7 +19,7 @@ class _LightingHelperScreenState extends State<LightingHelperScreen> with Single
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
-    
+
     _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
@@ -40,7 +40,7 @@ class _LightingHelperScreenState extends State<LightingHelperScreen> with Single
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // TOP BLOCK: LIGHTING
+
               Expanded(
                 child: Semantics(
                   label: 'Warning: Lighting too low. Lumens at 12 percent.',
@@ -55,7 +55,7 @@ class _LightingHelperScreenState extends State<LightingHelperScreen> with Single
                     ),
                     child: Stack(
                       children: [
-                        // Decorative Ruler Left
+
                         Positioned(
                           left: 0,
                           top: 0,
@@ -73,7 +73,7 @@ class _LightingHelperScreenState extends State<LightingHelperScreen> with Single
                             ),
                           ),
                         ),
-                        
+
                         Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -156,7 +156,7 @@ class _LightingHelperScreenState extends State<LightingHelperScreen> with Single
                 ),
               ),
 
-              // CENTRAL FOCAL POINT (The "Hinge")
+
               SizedBox(
                 height: 120,
                 child: Center(
@@ -205,7 +205,7 @@ class _LightingHelperScreenState extends State<LightingHelperScreen> with Single
                 ),
               ),
 
-              // BOTTOM BLOCK: POSITION
+
               Expanded(
                 child: Semantics(
                   label: 'Distance: Move Phone Back plus 6 inches.',
@@ -220,7 +220,7 @@ class _LightingHelperScreenState extends State<LightingHelperScreen> with Single
                     ),
                     child: Stack(
                       children: [
-                        // Decorative Ruler Right
+
                         Positioned(
                           right: 0,
                           top: 0,
@@ -239,12 +239,12 @@ class _LightingHelperScreenState extends State<LightingHelperScreen> with Single
                             ),
                           ),
                         ),
-                        
+
                         Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Note: SVG rotation equivalent for a material icon representing a phone or straightness
+
                               const Icon(Icons.straighten, color: Colors.white, size: 72),
                               const SizedBox(height: 16),
                               const Text(
@@ -291,7 +291,7 @@ class _LightingHelperScreenState extends State<LightingHelperScreen> with Single
 
               const SizedBox(height: 16),
 
-              // FOOTER CANCEL
+
               Semantics(
                 button: true,
                 label: 'Cancel scan and close helper',

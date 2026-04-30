@@ -5,15 +5,15 @@ class LoginErrorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const bgColor = Color(0xFF5A0C1E); // Deep crimson
-    
+    const bgColor = Color(0xFF5A0C1E);
+
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 48), // Simulated spacer
-            
+            const SizedBox(height: 48),
+
             Expanded(
               child: Center(
                 child: Padding(
@@ -62,8 +62,8 @@ class LoginErrorScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
-            // Bottom Action Area
+
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: Semantics(

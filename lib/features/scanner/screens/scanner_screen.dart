@@ -67,11 +67,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final isAnalyzing = scannerState.phase == ScanPhase.analyzing;
     final isCapturing = scannerState.phase == ScanPhase.capturing;
 
-    // Listen for phase changes and navigate accordingly
+
     ref.listen<ScannerState>(scannerControllerProvider, (prev, next) {
       if (_hasNavigated) return;
 
-      // Double haptic when analysis begins
+
       if (prev?.phase != ScanPhase.analyzing && next.phase == ScanPhase.analyzing) {
         HapticFeedback.heavyImpact();
         Future.delayed(const Duration(milliseconds: 100), () {
@@ -113,29 +113,29 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
-        // Full-screen double-tap to scan
+
         onDoubleTap: _handleDoubleTap,
         behavior: HitTestBehavior.opaque,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Camera preview (hidden during analyzing phase)
+
             if (!isAnalyzing)
               _buildCameraLayer(scannerState),
 
-            // Full-screen modern analyzing overlay
+
             if (isAnalyzing)
               _buildAnalyzingScreen(),
 
-            // Capturing overlay (shows on top of camera during burst)
+
             if (isCapturing)
               _buildCapturingOverlay(scannerState),
 
-            // Idle state UI (corners + instruction)
+
             if (scannerState.phase == ScanPhase.idle)
               _buildIdleOverlay(context),
 
-            // Cancel button at bottom (only during idle + capturing)
+
             if (!isAnalyzing)
               _buildCancelBar(context),
           ],
@@ -149,7 +149,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       final camera = scannerState.controller!;
       return LayoutBuilder(
         builder: (context, constraints) {
-          // Use FittedBox with cover to maintain aspect ratio without stretching
+
           return ClipRect(
             child: OverflowBox(
               alignment: Alignment.center,
@@ -179,7 +179,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   Widget _buildIdleOverlay(BuildContext context) {
     return Stack(
       children: [
-        // Corner brackets
+
         Center(
           child: SizedBox(
             width: 280,
@@ -190,7 +190,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                 Align(alignment: Alignment.topRight, child: _buildCorner(top: true, left: false)),
                 Align(alignment: Alignment.bottomLeft, child: _buildCorner(top: false, left: true)),
                 Align(alignment: Alignment.bottomRight, child: _buildCorner(top: false, left: false)),
-                // Scanning line
+
                 AnimatedBuilder(
                   animation: _pulseController,
                   builder: (context, _) {
@@ -227,7 +227,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           ),
         ),
 
-        // Status text + instruction at top
+
         Positioned(
           top: MediaQuery.of(context).padding.top + 24,
           left: 24,
@@ -277,7 +277,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Flash animation
+
             AnimatedBuilder(
               animation: _progressController,
               builder: (context, _) {
@@ -296,7 +296,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Circular progress
+
                       SizedBox(
                         width: 120,
                         height: 120,
@@ -307,7 +307,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                           backgroundColor: Colors.white.withAlpha(30),
                         ),
                       ),
-                      // Photo count
+
                       Text(
                         '${(scannerState.captureProgress * 3).ceil()}/3',
                         style: const TextStyle(
@@ -347,7 +347,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     );
   }
 
-  /// Full-screen modern AI analyzing overlay — replaces the camera view entirely.
+
   Widget _buildAnalyzingScreen() {
     return Container(
       decoration: const BoxDecoration(
@@ -367,14 +367,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           children: [
             const Spacer(flex: 2),
 
-            // Spinning AI ring
+
             SizedBox(
               width: 180,
               height: 180,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Outer spinning ring
+
                   AnimatedBuilder(
                     animation: _analyzeSpinController,
                     builder: (context, _) {
@@ -399,7 +399,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                       );
                     },
                   ),
-                  // Inner glow circle
+
                   AnimatedBuilder(
                     animation: _pulseController,
                     builder: (context, _) {
@@ -429,7 +429,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             ),
             const SizedBox(height: 48),
 
-            // Text
+
             const Text(
               'ANALYZING',
               style: TextStyle(
@@ -450,7 +450,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             ),
             const SizedBox(height: 48),
 
-            // Shimmer loading dots
+
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(3, (i) {
@@ -477,7 +477,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
             const Spacer(flex: 3),
 
-            // Tip text
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 48),
               child: Text(

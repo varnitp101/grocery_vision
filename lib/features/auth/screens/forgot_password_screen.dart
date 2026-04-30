@@ -16,7 +16,7 @@ class ForgotPasswordScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Title
+
               const Padding(
                 padding: EdgeInsets.only(top: 32),
                 child: Text(
@@ -30,8 +30,8 @@ class ForgotPasswordScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              
-              // Input Focus Area
+
+
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -63,8 +63,8 @@ class ForgotPasswordScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              
-              // Action Buttons
+
+
               Column(
                 children: [
                   SizedBox(
@@ -72,7 +72,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                     height: 88,
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO: Implement password reset logic
+
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryAmber,

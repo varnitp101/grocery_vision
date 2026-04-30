@@ -15,7 +15,7 @@
                 extend: {
                     colors: {
                         "primary": "#ffbf00",
-                        "background-light": "#f0f0f0", // Kept for config compliance, but UI is forced dark/clinical
+                        "background-light": "#f0f0f0",
                         "background-dark": "#0a0a0a",
                         "surface-dark": "#1a1a1a",
                         "surface-light": "#ffffff",
@@ -29,22 +29,22 @@
         }
     </script>
 <style>
-        /* Custom accessibility focus styles */
+
         *:focus-visible {
             outline: 4px solid #ffbf00;
             outline-offset: 4px;
         }
-        
-        /* Enforce high contrast text rendering */
+
+
         body {
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Ensure fill height for mobile layout */
+
         html, body {
             height: 100%;
-            overflow: hidden; /* Prevent scrolling on this fixed layout */
+            overflow: hidden;
         }
     </style>
 <style>
@@ -54,11 +54,11 @@
   </style>
   </head>
 <body class="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-white flex flex-col h-full selection:bg-primary selection:text-black">
-<!-- Screen Reader Announcement (Hidden visually but available to DOM) -->
+
 <div aria-live="polite" class="sr-only" role="status">
         Page 2 of 3. This app uses vibrations and voice to guide you. Tap the left side for Back, right side for Next.
     </div>
-<!-- Top Navigation / Progress -->
+
 <header class="flex-none px-6 pt-12 pb-4 flex justify-between items-center z-10">
 <div aria-label="Progress: Step 2 of 3" class="flex space-x-2">
 <div class="h-2 w-8 bg-gray-600 dark:bg-gray-800 rounded-full"></div>
@@ -67,34 +67,34 @@
 </div>
 <span class="text-sm font-bold tracking-widest uppercase text-gray-500 dark:text-gray-400">Step 2/3</span>
 </header>
-<!-- Main Content Area -->
+
 <main class="flex-grow flex flex-col justify-center items-center px-6 relative z-0">
-<!-- Central Icon Graphic -->
+
 <div aria-hidden="true" class="relative mb-12">
-<!-- Pulse Effect Behind -->
+
 <div class="absolute inset-0 bg-primary/10 rounded-full blur-3xl transform scale-150"></div>
 <div class="relative border-4 border-gray-800 bg-surface-dark w-48 h-48 rounded-3xl flex items-center justify-center shadow-2xl">
-<!-- Phone Icon -->
+
 <span class="material-icons-round text-8xl text-white opacity-90">smartphone</span>
-<!-- Vibration Lines Left -->
+
 <div class="absolute -left-6 top-1/2 -translate-y-1/2 flex flex-col gap-3">
 <div class="w-2 h-8 bg-primary rounded-full opacity-80 animate-pulse"></div>
 <div class="w-2 h-12 bg-primary rounded-full"></div>
 <div class="w-2 h-8 bg-primary rounded-full opacity-80 animate-pulse"></div>
 </div>
-<!-- Vibration Lines Right -->
+
 <div class="absolute -right-6 top-1/2 -translate-y-1/2 flex flex-col gap-3">
 <div class="w-2 h-8 bg-primary rounded-full opacity-80 animate-pulse"></div>
 <div class="w-2 h-12 bg-primary rounded-full"></div>
 <div class="w-2 h-8 bg-primary rounded-full opacity-80 animate-pulse"></div>
 </div>
-<!-- Speaker Icon Overlay (Bottom Right) -->
+
 <div class="absolute -bottom-4 -right-4 bg-primary text-black p-3 rounded-xl border-4 border-background-dark shadow-lg">
 <span class="material-icons-round text-3xl">volume_up</span>
 </div>
 </div>
 </div>
-<!-- Text Content -->
+
 <div class="text-center max-w-sm space-y-6">
 <h1 class="text-4xl font-bold tracking-tight text-black dark:text-white">
                 Audio &amp; <span class="text-primary">Haptics</span>
@@ -115,18 +115,18 @@
 </div>
 </div>
 </main>
-<!-- Massive Split Controller Footer -->
+
 <footer class="flex-none h-[25vh] w-full flex border-t-2 border-gray-800 bg-surface-dark relative">
-<!-- Tactile Divider Line -->
+
 <div class="absolute left-1/2 top-0 bottom-0 w-1 bg-black z-10"></div>
-<!-- BACK Button (Left Half) -->
+
 <button aria-label="Go Back to previous step" class="group w-1/2 h-full relative bg-surface-dark hover:bg-gray-800 active:bg-gray-700 transition-colors focus:z-20 flex flex-col items-center justify-center gap-4 touch-manipulation">
 <div class="p-4 rounded-full border-2 border-gray-600 group-hover:border-white transition-colors">
 <span class="material-icons-round text-4xl text-gray-400 group-hover:text-white">arrow_back</span>
 </div>
 <span class="text-2xl font-bold text-gray-300 uppercase tracking-widest group-hover:text-white">Back</span>
 </button>
-<!-- NEXT Button (Right Half) -->
+
 <button aria-label="Continue to next step" class="group w-1/2 h-full relative bg-primary hover:bg-[#e6ac00] active:bg-[#cc9900] transition-colors focus:z-20 flex flex-col items-center justify-center gap-4 touch-manipulation">
 <div class="p-4 rounded-full border-4 border-black/20 group-hover:border-black/40 transition-colors">
 <span class="material-icons-round text-4xl text-black font-bold">arrow_forward</span>

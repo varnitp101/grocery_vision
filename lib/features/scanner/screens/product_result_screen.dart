@@ -56,7 +56,7 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Header
+
               SizedBox(
                 height: 56,
                 child: Row(
@@ -87,7 +87,7 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                       child: GestureDetector(
                         onTap: () {
                           _tts.stop();
-                          // Navigate to dashboard History tab (index 1)
+
                           Navigator.of(context).pushAndRemoveUntil(
                             MaterialPageRoute(builder: (_) => const DashboardScreen(initialIndex: 1)),
                             (route) => false,
@@ -108,8 +108,8 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              
-              // Main Card
+
+
               Expanded(
                 child: Container(
                   width: double.infinity,
@@ -210,8 +210,8 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                           ),
                         ],
                       ),
-                      
-                      // Match Badge
+
+
                       Positioned(
                         top: 16,
                         right: 16,
@@ -244,8 +244,8 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              
-              // Navigation / Actions
+
+
               Column(
                 children: [
                   Row(

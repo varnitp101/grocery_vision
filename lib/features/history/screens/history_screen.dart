@@ -16,7 +16,7 @@ class HistoryScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+
             Container(
               padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
               decoration: BoxDecoration(
@@ -37,7 +37,7 @@ class HistoryScreen extends ConsumerWidget {
                       letterSpacing: -0.5,
                     ),
                   ),
-                  // Refresh button
+
                   GestureDetector(
                     onTap: () => ref.invalidate(historyProvider),
                     child: Container(
@@ -55,7 +55,7 @@ class HistoryScreen extends ConsumerWidget {
               ),
             ),
 
-            // Content
+
             Expanded(
               child: historyAsync.when(
                 loading: () => const Center(
@@ -86,7 +86,7 @@ class HistoryScreen extends ConsumerWidget {
                   return RefreshIndicator(
                     onRefresh: () async {
                       ref.invalidate(historyProvider);
-                      // Wait briefly for the provider to start fetching
+
                       await Future.delayed(const Duration(milliseconds: 500));
                     },
                     color: AppTheme.primaryAmber,
@@ -191,7 +191,7 @@ class _HistoryCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                // Product Icon
+
                 Container(
                   width: 56,
                   height: 56,
@@ -207,7 +207,7 @@ class _HistoryCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                // Info
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +271,7 @@ class _HistoryCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Arrow
+
                 Icon(
                   Icons.chevron_right_rounded,
                   color: Colors.white.withAlpha(50),

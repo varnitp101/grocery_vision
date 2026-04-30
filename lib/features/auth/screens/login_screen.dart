@@ -82,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         bottom: false,
         child: Column(
           children: [
-            // Header
+
             Padding(
               padding: const EdgeInsets.only(top: 32, left: 32, right: 32, bottom: 16),
               child: Row(
@@ -119,7 +119,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
 
-            // Form Content
+
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -182,7 +182,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
 
-            // Footer actions
+
             Container(
               padding: const EdgeInsets.all(24).copyWith(bottom: 24 + MediaQuery.of(context).padding.bottom),
               decoration: const BoxDecoration(
@@ -193,14 +193,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 children: [
                   SizedBox(
                     width: double.infinity,
-                    height: 80, // Large touch target
+                    height: 80,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _login,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
-                      child: _isLoading 
+                      child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.black)
                         : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -234,7 +234,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.g_mobiledata, color: Colors.black, size: 48), // Replace with SVG logo
+                          Icon(Icons.g_mobiledata, color: Colors.black, size: 48),
                           SizedBox(width: 12),
                           Text(
                             'Sign in with Google',

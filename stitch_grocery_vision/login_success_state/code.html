@@ -29,7 +29,7 @@
         }
     </script>
 <style>
-        /* Custom accessibility focus ring */
+
         :focus-visible {
             outline: 4px solid #ffa200;
             outline-offset: 4px;
@@ -42,16 +42,16 @@
   </style>
   </head>
 <body class="bg-background-dark font-display h-screen w-full overflow-hidden flex flex-col justify-between selection:bg-primary selection:text-black">
-<!-- Screen Reader Announcement Wrapper -->
-<!-- This invisible element is designed to be the first thing read by assistive technologies -->
+
+
 <div aria-live="assertive" class="sr-only" role="alert">
         Success. You are now logged in. Double tap the enter app button to enter the main dashboard.
     </div>
-<!-- Main Content Area: Centered Vertically -->
+
 <main aria-describedby="status-desc" aria-labelledby="status-heading" class="flex-1 flex flex-col items-center justify-center px-6 w-full max-w-md mx-auto relative z-10">
-<!-- Success Indicator -->
+
 <div class="mb-12 relative">
-<!-- Decorative Glow behind the circle -->
+
 <div aria-hidden="true" class="absolute inset-0 bg-primary/20 blur-[60px] rounded-full scale-150 pointer-events-none"></div>
 <div class="w-32 h-32 rounded-full border-[6px] border-primary flex items-center justify-center bg-transparent shadow-[0_0_20px_rgba(255,162,0,0.2)]">
 <span class="material-symbols-outlined text-white text-[64px] font-bold" style="font-variation-settings: 'wght' 700;">
@@ -59,7 +59,7 @@
                 </span>
 </div>
 </div>
-<!-- Text Content -->
+
 <div class="text-center space-y-4">
 <h1 class="text-white text-4xl sm:text-5xl font-bold tracking-tight uppercase leading-none" id="status-heading">
                 LOGIN<br/>SUCCESSFUL
@@ -69,8 +69,8 @@
             </p>
 </div>
 </main>
-<!-- Bottom Action Area: Massive Touch Target -->
-<!-- Occupying the lower section as requested -->
+
+
 <div class="w-full bg-background-dark pt-6 pb-safe px-4 sm:px-6 relative z-20 border-t border-white/5">
 <button aria-label="Enter App" class="w-full h-24 sm:h-28 bg-primary hover:bg-[#ffb700] active:scale-[0.98] transition-all duration-200 rounded-xl flex items-center justify-center group mb-4 shadow-[0_0_40px_rgba(255,162,0,0.15)]">
 <span class="text-background-dark text-2xl sm:text-3xl font-bold tracking-wider uppercase mr-3">ENTER APP</span>
@@ -78,9 +78,9 @@
                 arrow_forward
             </span>
 </button>
-<!-- Bottom padding for iOS Home Indicator safe area handled by margin/padding logic -->
+
 <div class="h-6 w-full"></div>
 </div>
-<!-- Background texture hint (subtle noise or pattern for clinical feel) -->
+
 <div class="fixed inset-0 pointer-events-none opacity-[0.03] z-0" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAowv4H6OFrk7uXFILoOkWGUtD9_ZHH0zTIJP-AJgIO6xkwhurpt5ZsyC2ygaZ0k06eYIi9Hog-LQCdHFA-Pr18aWvy8rCJXmAlHV7kLp8Ieu1SCa5QTYsN-WKg5LpUnvr5YUalCrYWcdmGx1zRqPO1IQvQABLenUS1R2HRS0PxKUDCutLY-zosEcmxovz2EXDUsZ-YxkSulBwe-AVIlsF3AKXNmtQjTodd49_yMnfBNQlEmTaJgpd7jnnZ_sifEual1KitEjNNOwM-');"></div>
 </body></html>

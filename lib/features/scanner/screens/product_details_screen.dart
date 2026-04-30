@@ -51,7 +51,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+
             Container(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
               decoration: BoxDecoration(
@@ -83,13 +83,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ],
               ),
             ),
-            
-            // Scrollable Content
+
+
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                  // Captured Product Image
+
                   if (widget.capturedImage != null) ...[
                     Container(
                       height: 200,
@@ -110,7 +110,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     const SizedBox(height: 16),
                   ],
 
-                  // Stop Summary button
+
                   Semantics(
                     label: 'Stop Summary',
                     button: true,
@@ -143,7 +143,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   const SizedBox(height: 24),
 
 
-                  // Top Stats (Dynamic)
+
                   Row(
                     children: [
                       if (widget.product.isFood)
@@ -178,8 +178,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
-                  // Nutrition Facts Grid (Only if food and info exists)
+
+
                   if (widget.product.isFood && widget.product.nutritionInfo.isNotEmpty) ...[
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -228,7 +228,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         final value = widget.product.nutritionInfo.values.elementAt(index);
                         final alphas = [255, 128, 76, 204];
                         final alpha = alphas[index % alphas.length];
-                        
+
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
@@ -264,8 +264,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                     const SizedBox(height: 24),
                   ],
-                  
-                  // Ingredients List
+
+
                   if (widget.product.ingredients != 'N/A' && widget.product.ingredients != 'Not available') ...[
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 4.0),
@@ -299,8 +299,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                     const SizedBox(height: 24),
                   ],
-                  
-                  // Allergen Warning (Only if food and allergens exist)
+
+
                   if (widget.product.isFood && widget.product.allergens.isNotEmpty) ...[
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -348,8 +348,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                     const SizedBox(height: 32),
                   ],
-                  
-                  // WEB KNOWLEDGE (Moved Section)
+
+
                   if (widget.product.honestTake != null && widget.product.honestTake!.isNotEmpty) ...[
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -402,8 +402,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ],
               ),
             ),
-            
-            // Footer Navigation
+
+
             Container(
               decoration: BoxDecoration(
                 boxShadow: [
