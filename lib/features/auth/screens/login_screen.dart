@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/auth_provider.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
@@ -32,9 +33,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
       }
     } catch (e) {
+      debugPrint('Login error: $e');
+      String msg = 'Check your email and password and try again.';
+      if (e is FirebaseAuthException) {
+        msg = e.message ?? e.code;
+      } else {
+        msg = e.toString();
+      }
       if (mounted) {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const LoginErrorScreen()),
+          MaterialPageRoute(
+            builder: (_) => LoginErrorScreen(
+              errorMessage: msg,
+            ),
+          ),
         );
       }
     } finally {
@@ -52,9 +64,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
       }
     } catch (e) {
+      debugPrint('Google login error: $e');
+      String msg = 'Google Sign In failed.';
+      if (e is FirebaseAuthException) {
+        msg = e.message ?? e.code;
+      } else {
+        msg = e.toString();
+      }
       if (mounted) {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const LoginErrorScreen()),
+          MaterialPageRoute(
+            builder: (_) => LoginErrorScreen(
+              title: 'GOOGLE\nSIGN-IN',
+              errorMessage: msg,
+            ),
+          ),
         );
       }
     } finally {

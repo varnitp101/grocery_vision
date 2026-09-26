@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
 class LoginErrorScreen extends StatelessWidget {
-  const LoginErrorScreen({super.key});
+  final String title;
+  final String? errorMessage;
+
+  const LoginErrorScreen({
+    super.key,
+    this.title = 'INVALID\nLOGIN',
+    this.errorMessage,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,30 +37,30 @@ class LoginErrorScreen extends StatelessWidget {
                         BoxShadow(color: Colors.black54, blurRadius: 10),
                       ],
                     ),
-                    child: const Column(
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.gpp_maybe, color: Colors.white, size: 72),
-                        SizedBox(height: 32),
+                        const Icon(Icons.gpp_maybe, color: Colors.white, size: 72),
+                        const SizedBox(height: 32),
                         Text(
-                          'INVALID\nLOGIN',
+                          title,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 40,
+                            fontSize: 36,
                             fontWeight: FontWeight.bold,
-                            height: 0.9,
+                            height: 0.95,
                             letterSpacing: 1.0,
                           ),
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(
-                          'Check your email and password and try again.',
+                          errorMessage ?? 'Check your email and password and try again.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
-                            height: 1.2,
+                            fontSize: 16,
+                            height: 1.3,
                           ),
                         ),
                       ],

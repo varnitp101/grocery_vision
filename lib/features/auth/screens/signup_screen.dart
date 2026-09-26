@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 import 'login_error_screen.dart';
@@ -32,9 +33,21 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         );
       }
     } catch (e) {
+      debugPrint('Signup error: $e');
+      String msg = 'Could not create account. Please try again.';
+      if (e is FirebaseAuthException) {
+        msg = e.message ?? e.code;
+      } else {
+        msg = e.toString();
+      }
       if (mounted) {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const LoginErrorScreen()),
+          MaterialPageRoute(
+            builder: (_) => LoginErrorScreen(
+              title: 'SIGNUP\nERROR',
+              errorMessage: msg,
+            ),
+          ),
         );
       }
     } finally {
@@ -52,9 +65,21 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         );
       }
     } catch (e) {
+      debugPrint('Google signup error: $e');
+      String msg = 'Google Sign Up failed.';
+      if (e is FirebaseAuthException) {
+        msg = e.message ?? e.code;
+      } else {
+        msg = e.toString();
+      }
       if (mounted) {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const LoginErrorScreen()),
+          MaterialPageRoute(
+            builder: (_) => LoginErrorScreen(
+              title: 'GOOGLE\nSIGN-UP',
+              errorMessage: msg,
+            ),
+          ),
         );
       }
     } finally {
