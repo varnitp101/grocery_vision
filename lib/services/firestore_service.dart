@@ -21,26 +21,28 @@ class FirestoreService {
     final uid = _uid;
     if (uid == null) return;
 
-    final batch = _db.batch();
-    final cartRef = _db.collection('users').doc(uid).collection('cart');
+    try {
+      final batch = _db.batch();
+      final cartRef = _db.collection('users').doc(uid).collection('cart');
 
+      final existing = await cartRef.get();
+      for (final doc in existing.docs) {
+        batch.delete(doc.reference);
+      }
 
-    final existing = await cartRef.get();
-    for (final doc in existing.docs) {
-      batch.delete(doc.reference);
+      for (final item in items) {
+        final docRef = cartRef.doc(item.product.id);
+        batch.set(docRef, {
+          'product': item.product.toFirestore(),
+          'quantity': item.quantity,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
+    } catch (e) {
+      // Gracefully handle missing Firestore DB
     }
-
-
-    for (final item in items) {
-      final docRef = cartRef.doc(item.product.id);
-      batch.set(docRef, {
-        'product': item.product.toFirestore(),
-        'quantity': item.quantity,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    }
-
-    await batch.commit();
   }
 
 
@@ -48,35 +50,41 @@ class FirestoreService {
     final uid = _uid;
     if (uid == null) return [];
 
-    final snapshot = await _db
-        .collection('users')
-        .doc(uid)
-        .collection('cart')
-        .get();
+    try {
+      final snapshot = await _db
+          .collection('users')
+          .doc(uid)
+          .collection('cart')
+          .get();
 
-    return snapshot.docs.map((doc) {
-      final data = doc.data();
-      final product = Product.fromFirestore(data['product'] as Map<String, dynamic>);
-      final quantity = (data['quantity'] as num?)?.toInt() ?? 1;
-      return CartItem(product: product, quantity: quantity);
-    }).toList();
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        final product = Product.fromFirestore(data['product'] as Map<String, dynamic>);
+        final quantity = (data['quantity'] as num?)?.toInt() ?? 1;
+        return CartItem(product: product, quantity: quantity);
+      }).toList();
+    } catch (e) {
+      return [];
+    }
   }
-
-
 
 
   Future<void> logScan(Product product) async {
     final uid = _uid;
     if (uid == null) return;
 
-    await _db
-        .collection('users')
-        .doc(uid)
-        .collection('scanHistory')
-        .add({
-      'product': product.toFirestore(),
-      'scannedAt': FieldValue.serverTimestamp(),
-    });
+    try {
+      await _db
+          .collection('users')
+          .doc(uid)
+          .collection('scanHistory')
+          .add({
+        'product': product.toFirestore(),
+        'scannedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      // Gracefully handle missing Firestore DB
+    }
   }
 
 
@@ -84,20 +92,24 @@ class FirestoreService {
     final uid = _uid;
     if (uid == null) return [];
 
-    final snapshot = await _db
-        .collection('users')
-        .doc(uid)
-        .collection('scanHistory')
-        .orderBy('scannedAt', descending: true)
-        .limit(20)
-        .get();
+    try {
+      final snapshot = await _db
+          .collection('users')
+          .doc(uid)
+          .collection('scanHistory')
+          .orderBy('scannedAt', descending: true)
+          .limit(20)
+          .get();
 
-    return snapshot.docs.map((doc) {
-      final data = doc.data();
-      return {
-        'product': Product.fromFirestore(data['product'] as Map<String, dynamic>),
-        'scannedAt': (data['scannedAt'] as Timestamp?)?.toDate(),
-      };
-    }).toList();
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'product': Product.fromFirestore(data['product'] as Map<String, dynamic>),
+          'scannedAt': (data['scannedAt'] as Timestamp?)?.toDate(),
+        };
+      }).toList();
+    } catch (e) {
+      return [];
+    }
   }
 }
