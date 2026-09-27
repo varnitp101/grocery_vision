@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/scanner_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../models/yolo_detection.dart';
 import 'product_result_screen.dart';
 import 'scan_error_screen.dart';
 
@@ -49,39 +49,32 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     _pulseController.dispose();
     _analyzeSpinController.dispose();
     _progressController.dispose();
+    ref.read(scannerControllerProvider.notifier).pauseScanning();
     super.dispose();
   }
 
   void _handleDoubleTap() {
     final phase = ref.read(scannerControllerProvider).phase;
     if (phase == ScanPhase.idle) {
-      HapticFeedback.mediumImpact();
       _progressController.forward(from: 0.0);
-      ref.read(scannerControllerProvider.notifier).captureAndIdentify();
+      ref.read(scannerControllerProvider.notifier).handleDoubleTap();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final scannerState = ref.watch(scannerControllerProvider);
-    final isAnalyzing = scannerState.phase == ScanPhase.analyzing;
-    final isCapturing = scannerState.phase == ScanPhase.capturing;
-
+    final phase = ref.watch(scannerControllerProvider.select((s) => s.phase));
+    final isGemini = phase == ScanPhase.geminiProcessing;
+    final isCapturing = phase == ScanPhase.capturing ||
+        phase == ScanPhase.barcodeProcessing;
+    final isBarcodeChoice = phase == ScanPhase.barcodeChoicePrompt;
 
     ref.listen<ScannerState>(scannerControllerProvider, (prev, next) {
       if (_hasNavigated) return;
 
-
-      if (prev?.phase != ScanPhase.analyzing && next.phase == ScanPhase.analyzing) {
-        HapticFeedback.heavyImpact();
-        Future.delayed(const Duration(milliseconds: 100), () {
-          HapticFeedback.heavyImpact();
-        });
-      }
-
-      if (next.phase == ScanPhase.found && next.scannedProduct != null) {
+      if (next.phase == ScanPhase.productFound && next.scannedProduct != null) {
         _hasNavigated = true;
-        HapticFeedback.heavyImpact();
+        ref.read(scannerControllerProvider.notifier).pauseScanning();
         Navigator.of(context)
             .push(
           MaterialPageRoute(
@@ -93,85 +86,60 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         )
             .then((_) {
           _hasNavigated = false;
-          ref.read(scannerControllerProvider.notifier).resetToIdle();
+          ref.read(scannerControllerProvider.notifier).resetScanner();
         });
-      } else if (next.phase == ScanPhase.notFound ||
-          next.phase == ScanPhase.error) {
+      } else if (next.phase == ScanPhase.notFound || next.phase == ScanPhase.error) {
         _hasNavigated = true;
-        HapticFeedback.heavyImpact();
+        ref.read(scannerControllerProvider.notifier).pauseScanning();
         Navigator.of(context)
             .push(
           MaterialPageRoute(builder: (_) => const ScanErrorScreen()),
         )
             .then((_) {
           _hasNavigated = false;
-          ref.read(scannerControllerProvider.notifier).resetToIdle();
+          ref.read(scannerControllerProvider.notifier).resetScanner();
         });
       }
     });
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: GestureDetector(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          ref.read(scannerControllerProvider.notifier).pauseScanning();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: GestureDetector(
+          onDoubleTap: _handleDoubleTap,
+          behavior: HitTestBehavior.opaque,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Camera Preview Layer (never rebuilds on live YOLO detections!)
+              const _CameraPreviewLayer(),
 
-        onDoubleTap: _handleDoubleTap,
-        behavior: HitTestBehavior.opaque,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
+              // Live YOLO Bounding Boxes Layer (isolated repaint)
+              const _YoloDetectionsLayer(),
 
-            if (!isAnalyzing)
-              _buildCameraLayer(scannerState),
+              // AI Analyzing Screen
+              if (isGemini) _buildAnalyzingScreen(),
 
+              // Capturing / Barcode Scanning Overlay
+              if (isCapturing) _buildCapturingOverlay(phase),
 
-            if (isAnalyzing)
-              _buildAnalyzingScreen(),
+              // Barcode Choice Overlay (Fallback Options)
+              if (isBarcodeChoice) _buildBarcodeChoiceOverlay(context),
 
+              // Idle Scanner Frame & Guide
+              if (phase == ScanPhase.idle) _buildIdleOverlay(context),
 
-            if (isCapturing)
-              _buildCapturingOverlay(scannerState),
-
-
-            if (scannerState.phase == ScanPhase.idle)
-              _buildIdleOverlay(context),
-
-
-            if (!isAnalyzing)
-              _buildCancelBar(context),
-          ],
+              // Bottom Cancel Bar
+              if (!isGemini && !isBarcodeChoice) _buildCancelBar(context),
+            ],
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildCameraLayer(ScannerState scannerState) {
-    if (scannerState.isInitialized && scannerState.controller != null) {
-      final camera = scannerState.controller!;
-      return LayoutBuilder(
-        builder: (context, constraints) {
-
-          return ClipRect(
-            child: OverflowBox(
-              alignment: Alignment.center,
-              maxWidth: double.infinity,
-              maxHeight: double.infinity,
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: constraints.maxWidth,
-                  height: constraints.maxWidth * camera.value.aspectRatio,
-                  child: CameraPreview(camera),
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    }
-    return Container(
-      color: Colors.black,
-      child: const Center(
-        child: CircularProgressIndicator(color: AppTheme.primaryAmber),
       ),
     );
   }
@@ -179,7 +147,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   Widget _buildIdleOverlay(BuildContext context) {
     return Stack(
       children: [
-
         Center(
           child: SizedBox(
             width: 280,
@@ -190,7 +157,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                 Align(alignment: Alignment.topRight, child: _buildCorner(top: true, left: false)),
                 Align(alignment: Alignment.bottomLeft, child: _buildCorner(top: false, left: true)),
                 Align(alignment: Alignment.bottomRight, child: _buildCorner(top: false, left: false)),
-
                 AnimatedBuilder(
                   animation: _pulseController,
                   builder: (context, _) {
@@ -227,7 +193,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           ),
         ),
 
-
+        // Header instructions
         Positioned(
           top: MediaQuery.of(context).padding.top + 24,
           left: 24,
@@ -237,7 +203,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             decoration: BoxDecoration(
               color: Colors.black.withAlpha(200),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.primaryAmber.withAlpha(60)),
+              border: Border.all(color: AppTheme.primaryAmber.withAlpha(80)),
             ),
             child: const Column(
               children: [
@@ -270,72 +236,58 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     );
   }
 
-  Widget _buildCapturingOverlay(ScannerState scannerState) {
+  Widget _buildCapturingOverlay(ScanPhase phase) {
+    final isBarcode = phase == ScanPhase.barcodeProcessing;
     return Container(
-      color: Colors.black.withAlpha(120),
+      color: Colors.black.withAlpha(150),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-
-            AnimatedBuilder(
-              animation: _progressController,
-              builder: (context, _) {
-                return Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withAlpha(
-                        (100 + (_progressController.value * 155)).toInt(),
-                      ),
-                      width: 4,
+            Container(
+              width: 130,
+              height: 130,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppTheme.primaryAmber.withAlpha(150),
+                  width: 3,
+                ),
+              ),
+              child: const Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 4,
+                      color: AppTheme.primaryAmber,
                     ),
                   ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-
-                      SizedBox(
-                        width: 120,
-                        height: 120,
-                        child: CircularProgressIndicator(
-                          value: scannerState.captureProgress,
-                          strokeWidth: 6,
-                          color: AppTheme.primaryAmber,
-                          backgroundColor: Colors.white.withAlpha(30),
-                        ),
-                      ),
-
-                      Text(
-                        '${(scannerState.captureProgress * 3).ceil()}/3',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
+                  Icon(
+                    Icons.center_focus_strong,
+                    color: AppTheme.primaryAmber,
+                    size: 44,
                   ),
-                );
-              },
+                ],
+              ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'CAPTURING',
-              style: TextStyle(
+            Text(
+              isBarcode ? 'SCANNING BARCODE' : 'CHECKING PRODUCT',
+              style: const TextStyle(
                 color: Colors.white,
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 4.0,
+                letterSpacing: 3.0,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'HOLD STEADY',
               style: TextStyle(
-                color: Colors.white.withAlpha(150),
+                color: Colors.white.withAlpha(170),
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2.0,
@@ -347,6 +299,143 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     );
   }
 
+  /// High-contrast accessible choice buttons when barcode is missing
+  Widget _buildBarcodeChoiceOverlay(BuildContext context) {
+    return Container(
+      color: const Color(0xEA0A0F1C),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF132F4C),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withAlpha(30)),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(
+                      Icons.barcode_reader,
+                      color: AppTheme.primaryAmber,
+                      size: 56,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Barcode Not Detected',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Would you like to try scanning the barcode again, or fetch details using AI web vision?',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+
+              // Button 1: Scan Barcode Again
+              Semantics(
+                label: 'Scan Barcode Again. Returns to live camera.',
+                button: true,
+                child: SizedBox(
+                  height: 68,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withAlpha(20),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      side: const BorderSide(color: Colors.white54, width: 2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: () {
+                      ref.read(scannerControllerProvider.notifier).scanBarcodeAgain();
+                    },
+                    icon: const Icon(Icons.refresh, size: 28),
+                    label: const Text(
+                      'SCAN BARCODE AGAIN',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Button 2: Get Details from Web (Gemini)
+              Semantics(
+                label: 'Get Details from Web. Uses AI to analyze the full captured image.',
+                button: true,
+                child: SizedBox(
+                  height: 68,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryAmber,
+                      foregroundColor: AppTheme.darkNavy,
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: () {
+                      ref.read(scannerControllerProvider.notifier).getDetailsFromWeb();
+                    },
+                    icon: const Icon(Icons.auto_awesome, size: 28),
+                    label: const Text(
+                      'GET DETAILS FROM WEB',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Cancel button
+              TextButton(
+                onPressed: () {
+                  ref.read(scannerControllerProvider.notifier).resetScanner();
+                },
+                child: const Text(
+                  'Dismiss and Resume',
+                  style: TextStyle(
+                    color: Colors.white60,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildAnalyzingScreen() {
     return Container(
@@ -366,15 +455,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Spacer(flex: 2),
-
-
             SizedBox(
               width: 180,
               height: 180,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-
                   AnimatedBuilder(
                     animation: _analyzeSpinController,
                     builder: (context, _) {
@@ -399,7 +485,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                       );
                     },
                   ),
-
                   AnimatedBuilder(
                     animation: _pulseController,
                     builder: (context, _) {
@@ -428,63 +513,32 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               ),
             ),
             const SizedBox(height: 48),
-
-
             const Text(
-              'ANALYZING',
+              'AI VISUAL SEARCH',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 32,
+                fontSize: 28,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 6.0,
+                letterSpacing: 4.0,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'AI is identifying your product...',
+              'Analyzing packaging and text details...',
               style: TextStyle(
-                color: Colors.white.withAlpha(130),
+                color: Colors.white.withAlpha(150),
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 48),
-
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(3, (i) {
-                return AnimatedBuilder(
-                  animation: _pulseController,
-                  builder: (context, _) {
-                    final offset = i * 0.3;
-                    final value = ((_pulseController.value + offset) % 1.0);
-                    return Container(
-                      width: 10,
-                      height: 10,
-                      margin: const EdgeInsets.symmetric(horizontal: 6),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppTheme.primaryAmber.withAlpha(
-                          (80 + value * 175).toInt(),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }),
-            ),
-
             const Spacer(flex: 3),
-
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 48),
               child: Text(
-                'This usually takes a few seconds.',
+                'Searching across grocery database and web...',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withAlpha(80),
+                  color: Colors.white.withAlpha(100),
                   fontSize: 14,
                 ),
               ),
@@ -505,7 +559,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         button: true,
         label: 'Cancel scanning',
         child: GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
+          onTap: () {
+            ref.read(scannerControllerProvider.notifier).pauseScanning();
+            Navigator.of(context).pop();
+          },
           child: Container(
             height: 80 + MediaQuery.of(context).padding.bottom,
             padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
@@ -563,6 +620,149 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               : BorderSide.none,
         ),
       ),
+    );
+  }
+}
+
+class _YoloBoundingBoxPainter extends CustomPainter {
+  final List<YoloDetection> detections;
+  final Size screenSize;
+
+  _YoloBoundingBoxPainter({required this.detections, required this.screenSize});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final detection in detections) {
+      final rect = detection.toRect(screenSize);
+
+      // Box border
+      final boxPaint = Paint()
+        ..color = AppTheme.primaryAmber
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.5;
+
+      // Glow effect
+      final glowPaint = Paint()
+        ..color = AppTheme.primaryAmber.withAlpha(80)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 7.0
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+      canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), glowPaint);
+      canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), boxPaint);
+
+      // Label background
+      final labelText = '${detection.displayName} ${(detection.confidence * 100).toInt()}%';
+      final textSpan = TextSpan(
+        text: labelText,
+        style: const TextStyle(
+          color: AppTheme.darkNavy,
+          fontSize: 13,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.5,
+        ),
+      );
+
+      final textPainter = TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      final labelBgRect = Rect.fromLTWH(
+        rect.left,
+        (rect.top - 24).clamp(0.0, size.height - 24),
+        textPainter.width + 12,
+        22,
+      );
+
+      final bgPaint = Paint()..color = AppTheme.primaryAmber;
+      canvas.drawRRect(RRect.fromRectAndRadius(labelBgRect, const Radius.circular(4)), bgPaint);
+
+      textPainter.paint(
+        canvas,
+        Offset(labelBgRect.left + 6, labelBgRect.top + 3),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _YoloBoundingBoxPainter oldDelegate) {
+    return oldDelegate.detections != detections;
+  }
+}
+
+class _CameraPreviewLayer extends ConsumerWidget {
+  const _CameraPreviewLayer();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isGemini = ref.watch(
+      scannerControllerProvider.select((s) => s.phase == ScanPhase.geminiProcessing),
+    );
+    if (isGemini) return const SizedBox.shrink();
+
+    final isInitialized = ref.watch(
+      scannerControllerProvider.select((s) => s.isInitialized),
+    );
+    final camera = ref.watch(
+      scannerControllerProvider.select((s) => s.controller),
+    );
+
+    if (isInitialized && camera != null && camera.value.isInitialized) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return ClipRect(
+            child: OverflowBox(
+              alignment: Alignment.center,
+              maxWidth: double.infinity,
+              maxHeight: double.infinity,
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: constraints.maxWidth,
+                  height: constraints.maxWidth * camera.value.aspectRatio,
+                  child: CameraPreview(camera),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+    return Container(
+      color: Colors.black,
+      child: const Center(
+        child: CircularProgressIndicator(color: AppTheme.primaryAmber),
+      ),
+    );
+  }
+}
+
+class _YoloDetectionsLayer extends ConsumerWidget {
+  const _YoloDetectionsLayer();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final phase = ref.watch(
+      scannerControllerProvider.select((s) => s.phase),
+    );
+    if (phase != ScanPhase.idle) return const SizedBox.shrink();
+
+    final detections = ref.watch(
+      scannerControllerProvider.select((s) => s.detections),
+    );
+    if (detections.isEmpty) return const SizedBox.shrink();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return CustomPaint(
+          size: Size(constraints.maxWidth, constraints.maxHeight),
+          painter: _YoloBoundingBoxPainter(
+            detections: detections,
+            screenSize: Size(constraints.maxWidth, constraints.maxHeight),
+          ),
+        );
+      },
     );
   }
 }

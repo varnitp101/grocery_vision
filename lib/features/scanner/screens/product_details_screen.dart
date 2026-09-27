@@ -27,9 +27,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Future<void> _announceDetails() async {
-    final String announcement = 'Detailed Product View for ${widget.product.name}. '
-        '${widget.product.honestTake != null ? "Web Knowledge: ${widget.product.honestTake}. " : ""}'
-        '${widget.product.isFood ? "Contains allergens: ${widget.product.allergens.join(', ')}. " : ""}'
+    final String priceText = 'Price: ${widget.product.displayPrice}. ';
+    final String announcement = 'Detailed Product View for ${widget.product.name}. $priceText'
+        '${widget.product.honestTake != null ? "Product Overview: ${widget.product.honestTake}. " : ""}'
+        '${widget.product.shelfLife != null ? "Shelf life: ${widget.product.shelfLife}. " : ""}'
+        '${widget.product.usageInstructions != null ? "Usage: ${widget.product.usageInstructions}. " : ""}'
+        '${widget.product.isFood && widget.product.allergens.isNotEmpty ? "Contains allergens: ${widget.product.allergens.join(', ')}. " : ""}'
         '${widget.product.isFood ? "Ingredients: ${widget.product.ingredients}." : ""}';
     await _tts.speak(announcement);
   }
@@ -156,16 +159,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           ),
                         ),
                       if (widget.product.isFood) const SizedBox(width: 16),
-                      if (widget.product.price != null)
+                      if (widget.product.price != null || widget.product.mrp != null)
                         Expanded(
                           child: _StatCard(
-                            label: 'Price',
-                            value: widget.product.price!,
+                            label: widget.product.mrp != null ? 'MRP' : 'Price',
+                            value: widget.product.displayPrice,
                             surfaceNavy: surfaceNavy,
                             primaryAmber: primaryAmber,
                           ),
                         ),
-                      if (widget.product.price != null) const SizedBox(width: 16),
+                      if (widget.product.price != null || widget.product.mrp != null) const SizedBox(width: 16),
                       Expanded(
                         child: _StatCard(
                           label: 'Size',

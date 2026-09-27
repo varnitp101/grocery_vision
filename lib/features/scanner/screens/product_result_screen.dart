@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import '../../../models/product_model.dart';
+import '../../../services/tts_service.dart';
 import '../../cart/providers/cart_provider.dart';
 import '../../cart/screens/added_to_cart_screen.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
@@ -23,8 +23,6 @@ class ProductResultScreen extends ConsumerStatefulWidget {
 }
 
 class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
-  final FlutterTts _tts = FlutterTts();
-
   @override
   void initState() {
     super.initState();
@@ -32,14 +30,28 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
   }
 
   Future<void> _announceResult() async {
-    final String announcement = 'Result found: ${widget.product.name}. Brand: ${widget.product.brand}. '
-        'Category: ${widget.product.category}. Add to cart, details, repeat info, and scan next options available.';
-    await _tts.speak(announcement);
+    final tts = ref.read(ttsServiceProvider);
+    final String pricePart = widget.product.mrp != null && widget.product.mrp! > 0
+        ? 'Price ${widget.product.mrp!.toStringAsFixed(widget.product.mrp!.truncateToDouble() == widget.product.mrp! ? 0 : 2)} rupees.'
+        : (widget.product.price != null && widget.product.price!.isNotEmpty
+            ? 'Price ${widget.product.price}.'
+            : '');
+
+    final String brandPart =
+        widget.product.brand.isNotEmpty && widget.product.brand != 'Unknown Brand'
+            ? 'Brand: ${widget.product.brand}.'
+            : '';
+
+    final String announcement =
+        'Result found: ${widget.product.name}. $brandPart $pricePart Category: ${widget.product.category}. '
+        'Add to cart, details, repeat info, and scan next options available.';
+
+    await tts.speak(announcement, priority: TtsPriority.immediate);
   }
 
   @override
   void dispose() {
-    _tts.stop();
+    ref.read(ttsServiceProvider).stop();
     super.dispose();
   }
 
@@ -48,6 +60,7 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
     const navyDeep = Color(0xFF0A1929);
     const navyCard = Color(0xFF132F4C);
     const primaryAmber = Color(0xFFFFBF00);
+    final isBarcode = widget.product.source == 'barcode';
 
     return Scaffold(
       backgroundColor: navyDeep,
@@ -56,18 +69,18 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-
+              // Top Bar
               SizedBox(
                 height: 56,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Semantics(
-                      label: 'Close result',
+                      label: 'Close result and return to scanner',
                       button: true,
                       child: GestureDetector(
                         onTap: () {
-                          _tts.stop();
+                          ref.read(ttsServiceProvider).stop();
                           Navigator.of(context).pop();
                         },
                         child: Container(
@@ -86,10 +99,11 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                       button: true,
                       child: GestureDetector(
                         onTap: () {
-                          _tts.stop();
-
+                          ref.read(ttsServiceProvider).stop();
                           Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(builder: (_) => const DashboardScreen(initialIndex: 1)),
+                            MaterialPageRoute(
+                              builder: (_) => const DashboardScreen(initialIndex: 1),
+                            ),
                             (route) => false,
                           );
                         },
@@ -109,7 +123,7 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
               ),
               const SizedBox(height: 16),
 
-
+              // Product Info Card
               Expanded(
                 child: Container(
                   width: double.infinity,
@@ -131,7 +145,7 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                         children: [
                           Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.all(24.0),
+                              padding: const EdgeInsets.all(20.0),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
                                 child: widget.capturedImage != null
@@ -144,7 +158,8 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                                         ? Image.network(
                                             widget.product.imageUrl,
                                             fit: BoxFit.contain,
-                                            errorBuilder: (ctx, error, stackTrace) => const Icon(
+                                            errorBuilder: (ctx, error, stackTrace) =>
+                                                const Icon(
                                               Icons.image_not_supported,
                                               size: 100,
                                               color: Colors.white54,
@@ -164,7 +179,7 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(24.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
                             child: Column(
                               children: [
                                 Text(
@@ -172,7 +187,7 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 28,
+                                    fontSize: 26,
                                     fontWeight: FontWeight.bold,
                                     height: 1.1,
                                   ),
@@ -182,28 +197,82 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                                   widget.product.brand,
                                   style: const TextStyle(
                                     color: Colors.white70,
-                                    fontSize: 18,
+                                    fontSize: 17,
                                     fontWeight: FontWeight.w500,
                                     letterSpacing: 0.5,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: primaryAmber.withAlpha(30),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: primaryAmber.withAlpha(80)),
-                                  ),
-                                  child: Text(
-                                    widget.product.category.toUpperCase(),
-                                    style: const TextStyle(
-                                      color: primaryAmber,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.5,
+
+                                // Price and Category Row
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: primaryAmber.withAlpha(30),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: primaryAmber.withAlpha(120)),
+                                      ),
+                                      child: Text(
+                                        widget.product.displayPrice,
+                                        style: const TextStyle(
+                                          color: primaryAmber,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 1.0,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withAlpha(15),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.white.withAlpha(30)),
+                                      ),
+                                      child: Text(
+                                        widget.product.category.toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                    ),
+                                    if (widget.product.size != null &&
+                                        widget.product.size!.isNotEmpty) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withAlpha(15),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.white.withAlpha(30)),
+                                        ),
+                                        child: Text(
+                                          widget.product.size!,
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ],
                             ),
@@ -211,28 +280,39 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                         ],
                       ),
 
-
+                      // Verification Badge (Top Right)
                       Positioned(
                         top: 16,
                         right: 16,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.green.withAlpha(50),
+                            color: isBarcode
+                                ? Colors.green.withAlpha(50)
+                                : Colors.cyan.withAlpha(50),
                             borderRadius: BorderRadius.circular(999),
-                            border: Border.all(color: Colors.green.withAlpha(128)),
+                            border: Border.all(
+                              color: isBarcode
+                                  ? Colors.greenAccent.withAlpha(150)
+                                  : Colors.cyanAccent.withAlpha(150),
+                            ),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 14),
-                              SizedBox(width: 4),
+                              Icon(
+                                isBarcode ? Icons.qr_code_scanner : Icons.auto_awesome,
+                                color: isBarcode ? Colors.greenAccent : Colors.cyanAccent,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
                               Text(
-                                '98% MATCH',
+                                isBarcode ? 'BARCODE VERIFIED' : 'AI VISUAL SEARCH',
                                 style: TextStyle(
-                                  color: Colors.greenAccent,
-                                  fontSize: 12,
+                                  color: isBarcode ? Colors.greenAccent : Colors.cyanAccent,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ],
@@ -245,7 +325,7 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
               ),
               const SizedBox(height: 16),
 
-
+              // Action Buttons
               Column(
                 children: [
                   Row(
@@ -258,10 +338,12 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                           bgColor: navyCard,
                           borderColor: Colors.white.withAlpha(50),
                           onTap: () {
-                            _tts.stop();
+                            ref.read(ttsServiceProvider).stop();
                             ref.read(cartProvider.notifier).addProduct(widget.product);
                             Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (_) => AddedToCartScreen(product: widget.product)),
+                              MaterialPageRoute(
+                                builder: (_) => AddedToCartScreen(product: widget.product),
+                              ),
                             );
                           },
                         ),
@@ -275,7 +357,7 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                           bgColor: navyCard,
                           borderColor: Colors.white.withAlpha(50),
                           onTap: () {
-                            _tts.stop();
+                            ref.read(ttsServiceProvider).stop();
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => ProductDetailsScreen(
@@ -305,14 +387,14 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _ActionCard(
-                          label: 'Scan Next',
+                          label: 'Scan Another',
                           icon: Icons.photo_camera_rounded,
                           iconColor: Colors.black,
                           labelColor: Colors.black,
                           bgColor: primaryAmber,
                           borderColor: primaryAmber,
                           onTap: () {
-                            _tts.stop();
+                            ref.read(ttsServiceProvider).stop();
                             Navigator.of(context).pop();
                           },
                         ),
