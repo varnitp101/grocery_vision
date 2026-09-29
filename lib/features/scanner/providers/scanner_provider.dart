@@ -87,7 +87,7 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
   bool _isStreaming = false;
   bool _isProcessingFrame = false;
   DateTime _lastFrameInferenceTime = DateTime.fromMillisecondsSinceEpoch(0);
-  static const int inferenceThrottleMs = 250;
+  static const int inferenceThrottleMs = 150;
 
   Timer? _silenceTimer;
 
@@ -98,18 +98,24 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
   HapticService get _haptic => _ref.read(hapticServiceProvider);
   LocalHistoryService get _localHistory => _ref.read(localHistoryServiceProvider);
 
-  Future<void> initializeCamera() async {
-    if (state.isInitialized &&
+  Future<void> initializeCamera({bool forceRecreate = false}) async {
+    if (!forceRecreate &&
+        state.isInitialized &&
         state.controller != null &&
         state.controller!.value.isInitialized) {
-      _startLiveStream();
+      await _startLiveStream();
       _startSilenceChecker();
       return;
     }
 
     try {
       await _stopLiveStream();
-      await state.controller?.dispose();
+      final oldCtrl = state.controller;
+      if (oldCtrl != null) {
+        try {
+          await oldCtrl.dispose();
+        } catch (_) {}
+      }
     } catch (_) {}
 
     try {
@@ -130,7 +136,7 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
 
       final controller = CameraController(
         _cameraDescription!,
-        ResolutionPreset.high,
+        ResolutionPreset.medium,
         enableAudio: false,
         imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.yuv420 : ImageFormatGroup.bgra8888,
       );
@@ -181,13 +187,27 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
 
   Future<void> _startLiveStream() async {
     final ctrl = state.controller;
-    if (ctrl == null || !ctrl.value.isInitialized || _isStreaming) {
-      debugPrint('_startLiveStream: skipping (ctrl=${ctrl != null}, isInit=${ctrl?.value.isInitialized}, isStreaming=$_isStreaming)');
+    if (ctrl == null || !ctrl.value.isInitialized) {
+      debugPrint('_startLiveStream: controller not initialized, skipping');
       return;
     }
 
     try {
+      // If controller is already streaming images, stop it first to ensure clean state
+      if (ctrl.value.isStreamingImages) {
+        debugPrint('_startLiveStream: stopping lingering stream first...');
+        try {
+          await ctrl.stopImageStream();
+        } catch (_) {}
+      }
+
+      // Try to resume preview if paused by Android ImageCapture
+      try {
+        await ctrl.resumePreview();
+      } catch (_) {}
+
       _isStreaming = true;
+      _isProcessingFrame = false;
       debugPrint('Starting camera image stream...');
       await ctrl.startImageStream((CameraImage image) {
         _onFrameReceived(image);
@@ -196,21 +216,26 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
     } catch (e, stack) {
       debugPrint('ERROR in startImageStream: $e\n$stack');
       _isStreaming = false;
+      // If startImageStream failed (e.g. surface lost), recreate camera cleanly
+      debugPrint('Recreating camera to restore live video feed...');
+      await initializeCamera(forceRecreate: true);
     }
   }
 
   Future<void> _stopLiveStream() async {
+    _isStreaming = false;
     final ctrl = state.controller;
-    if (ctrl != null && ctrl.value.isInitialized && _isStreaming) {
+    if (ctrl != null && ctrl.value.isInitialized) {
       try {
-        _isStreaming = false;
-        await ctrl.stopImageStream();
-        debugPrint('Image stream stopped successfully.');
+        if (ctrl.value.isStreamingImages) {
+          debugPrint('Stopping camera image stream...');
+          await ctrl.stopImageStream();
+          debugPrint('Camera image stream stopped successfully.');
+        }
       } catch (e) {
         debugPrint('Error stopping image stream: $e');
       }
     }
-    _isStreaming = false;
   }
 
   void _onFrameReceived(CameraImage image) async {
@@ -229,7 +254,7 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
       final detections = await _yolo.detectFromCameraImage(
         image,
         sensorOrientation: sensorOrientation,
-        confidenceThreshold: 0.12,
+        confidenceThreshold: 0.25,
       );
 
       if (!mounted || state.phase != ScanPhase.idle) {
@@ -252,13 +277,13 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
   }
 
   /// Pause all active scanning, camera stream, speech, and silence guidance
-  void pauseScanning() {
+  Future<void> pauseScanning() async {
     _silenceTimer?.cancel();
     _silenceTimer = null;
-    _isStreaming = false;
-    _stopLiveStream();
+    await _stopLiveStream();
     _tts.stop();
     _yolo.resetStability();
+    _isProcessingFrame = false;
     if (mounted) {
       state = state.copyWith(detections: []);
     }
@@ -278,7 +303,9 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
     _isBusy = true;
 
     try {
-      pauseScanning();
+      await pauseScanning();
+      // Allow CameraX hardware pipeline to settle after stopping stream
+      await Future.delayed(const Duration(milliseconds: 100));
 
       await _haptic.captureTriggered();
       await _tts.speak('Checking product...', priority: TtsPriority.immediate);
@@ -328,12 +355,12 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
       await _haptic.failureOrRetry();
       state = state.copyWith(
         phase: ScanPhase.barcodeChoicePrompt,
-        statusMessage: 'BARCODE NOT FOUND',
+        statusMessage: 'BARCODE NOT FOUND — CHOOSE OPTION',
         captureProgress: 0.7,
       );
 
       await _tts.speak(
-        'Barcode not recognized. Double tap left side to scan barcode again, or double tap right side to get details from web.',
+        'Barcode not recognized. Double tap on the left side to scan barcode again, or double tap on the right side to search through OCR.',
         priority: TtsPriority.immediate,
       );
     } catch (e) {
@@ -348,20 +375,21 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
   }
 
   Future<void> scanBarcodeAgain() async {
+    _tts.stop();
     resetScanner();
   }
 
-  Future<void> getDetailsFromWeb() async {
+  Future<void> searchThroughOcr() async {
     if (_isBusy || state.capturedImageBytes == null) return;
     _isBusy = true;
 
     try {
       await _haptic.captureTriggered();
-      await _tts.speak('Searching product details with AI...', priority: TtsPriority.immediate);
+      await _tts.speak('Extracting packaging text and details through OCR...', priority: TtsPriority.immediate);
 
       state = state.copyWith(
         phase: ScanPhase.geminiProcessing,
-        statusMessage: 'AI VISUAL SEARCH...',
+        statusMessage: 'SEARCHING THROUGH OCR...',
         captureProgress: 0.85,
       );
 
@@ -384,13 +412,16 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
     } catch (e) {
       state = state.copyWith(
         phase: ScanPhase.error,
-        statusMessage: 'AI SEARCH ERROR',
+        statusMessage: 'OCR EXTRACTION ERROR',
       );
-      _tts.speak('Could not fetch details. Please try again.', priority: TtsPriority.immediate);
+      _tts.speak('Could not extract details. Please try again.', priority: TtsPriority.immediate);
     } finally {
       _isBusy = false;
     }
   }
+
+  // Alias for backward compatibility
+  Future<void> getDetailsFromWeb() => searchThroughOcr();
 
   Future<void> _onProductSuccessfullyIdentified(Product product) async {
     await _haptic.productFound();
@@ -416,8 +447,9 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
     await _tts.speak(summary, priority: TtsPriority.immediate);
   }
 
-  void resetScanner() {
+  Future<void> resetScanner() async {
     _isBusy = false;
+    _isProcessingFrame = false;
     _yolo.resetStability();
     state = state.copyWith(
       phase: ScanPhase.idle,
@@ -427,8 +459,31 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
       captureProgress: 0.0,
       detections: [],
     );
-    _startLiveStream();
-    _startSilenceChecker();
+
+    final ctrl = state.controller;
+    if (ctrl == null || !ctrl.value.isInitialized) {
+      debugPrint('resetScanner: Controller uninitialized, recreating camera...');
+      await initializeCamera(forceRecreate: true);
+      return;
+    }
+
+    try {
+      if (ctrl.value.isStreamingImages) {
+        try {
+          await ctrl.stopImageStream();
+        } catch (_) {}
+      }
+
+      try {
+        await ctrl.resumePreview();
+      } catch (_) {}
+
+      await _startLiveStream();
+      _startSilenceChecker();
+    } catch (e) {
+      debugPrint('resetScanner error: $e. Recreating camera...');
+      await initializeCamera(forceRecreate: true);
+    }
   }
 
   @override

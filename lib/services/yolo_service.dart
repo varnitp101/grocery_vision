@@ -10,17 +10,24 @@ import '../utils/image_converter.dart';
 
 class YoloService {
   Interpreter? _interpreter;
-  List<String> _labels = ['bhujiya', 'dorito', 'maggie_masala'];
+
+  List<String> _labels = [
+    'Chaizop Tea Mix',
+    'Dark Fantasy Bourbon',
+    'Dark Fantasy Sandwich Creme',
+    'WishCare Shampoo',
+  ];
   bool _isModelLoaded = false;
   bool _isBusy = false;
 
-  static const int inputSize = 640;
-  static const int numAttributes = 7; // 4 box coords + 3 classes
-  static const int numAnchors = 8400;
+  int _inputWidth = 320;
+  int _inputHeight = 320;
+  int _numAttributes = 8; // 4 box coords + 4 classes
+  int _numAnchors = 2100;
 
-  // Single flat Float32List buffers for 0.1ms native memcpy in tflite_flutter
-  final Float32List _inputBuffer = Float32List(1 * 3 * inputSize * inputSize);
-  final Float32List _outputBuffer = Float32List(1 * numAttributes * numAnchors);
+  // Dynamically sized flat Float32List buffers for 0.1ms native memcpy in tflite_flutter
+  Float32List _inputBuffer = Float32List(1 * 320 * 320 * 3);
+  Float32List _outputBuffer = Float32List(1 * 8 * 2100);
 
   // Temporal stability tracking
   String? _lastCandidateClass;
@@ -38,6 +45,8 @@ class YoloService {
 
   bool get isModelLoaded => _isModelLoaded;
   List<String> get labels => _labels;
+  int get inputWidth => _inputWidth;
+  int get inputHeight => _inputHeight;
 
   Future<void> initialize() async {
     if (_isModelLoaded) return;
@@ -53,20 +62,42 @@ class YoloService {
           _labels = lines;
         }
       } catch (_) {
-        _labels = ['bhujiya', 'dorito', 'maggie_masala'];
+        _labels = [
+          'Chaizop Tea Mix',
+          'Dark Fantasy Bourbon',
+          'Dark Fantasy Sandwich Creme',
+          'WishCare Shampoo',
+        ];
       }
 
       final options = InterpreterOptions()..threads = 4;
-      _interpreter = await Interpreter.fromAsset(
-        'assets/models/best_int8.tflite',
-        options: options,
-      );
+      try {
+        _interpreter = await Interpreter.fromAsset(
+          'assets/models/weights_int8.tflite',
+          options: options,
+        );
+      } catch (_) {
+        _interpreter = await Interpreter.fromAsset(
+          'assets/models/best_int8.tflite',
+          options: options,
+        );
+      }
 
       final inT = _interpreter!.getInputTensor(0);
       final outT = _interpreter!.getOutputTensor(0);
+
+      // Dynamically adapt to model input & output tensor dimensions
+      _inputHeight = inT.shape[1];
+      _inputWidth = inT.shape[2];
+      _numAttributes = outT.shape[1];
+      _numAnchors = outT.shape[2];
+
+      _inputBuffer = Float32List(1 * _inputHeight * _inputWidth * 3);
+      _outputBuffer = Float32List(1 * _numAttributes * _numAnchors);
+
       _isModelLoaded = true;
       debugPrint('YoloService: Model initialized successfully. Labels: $_labels');
-      debugPrint('YoloService: in=${inT.shape} type=${inT.type}, out=${outT.shape} type=${outT.type}');
+      debugPrint('YoloService: in=${inT.shape} type=${inT.type}, out=${outT.shape} type=${outT.type} (anchors=$_numAnchors)');
     } catch (e) {
       debugPrint('YoloService: Model failed to load: $e');
       _isModelLoaded = false;
@@ -74,24 +105,15 @@ class YoloService {
   }
 
   String getDisplayName(String rawName) {
-    switch (rawName.toLowerCase()) {
-      case 'bhujiya':
-        return 'Bhujiya';
-      case 'dorito':
-        return 'Doritos';
-      case 'maggie_masala':
-        return 'Maggi Masala';
-      default:
-        if (rawName.isEmpty) return 'Grocery Item';
-        return rawName[0].toUpperCase() + rawName.substring(1).replaceAll('_', ' ');
-    }
+    if (rawName.isEmpty) return 'Grocery Item';
+    return rawName.replaceAll('_', ' ');
   }
 
   /// High-performance live inference directly from camera stream via flat buffer
   Future<List<YoloDetection>> detectFromCameraImage(
     CameraImage cameraImage, {
     int sensorOrientation = 90,
-    double confidenceThreshold = 0.20,
+    double confidenceThreshold = 0.25,
   }) async {
     if (!_isModelLoaded || _interpreter == null || _isBusy) {
       return [];
@@ -99,22 +121,23 @@ class YoloService {
 
     _isBusy = true;
     try {
-      final success = ImageConverter.fillPlanarFloat32List(
+      final letterbox = ImageConverter.fillLetterboxedFloat32List(
         cameraImage,
         _inputBuffer,
         sensorOrientation: sensorOrientation,
-        targetWidth: inputSize,
-        targetHeight: inputSize,
+        targetWidth: _inputWidth,
+        targetHeight: _inputHeight,
       );
 
-      if (!success) return [];
+      if (letterbox == null) return [];
 
-      // Native memcpy into tensor and out of tensor
+      // Direct native C memcpy execution
       _interpreter!.run(_inputBuffer.buffer, _outputBuffer.buffer);
 
       return _parseOutput(
         output: _outputBuffer,
         confidenceThreshold: confidenceThreshold,
+        letterbox: letterbox,
       );
     } catch (e, stack) {
       debugPrint('YoloService error: $e\n$stack');
@@ -127,7 +150,7 @@ class YoloService {
   /// Inference on a static decoded Image
   Future<List<YoloDetection>> detect({
     required img.Image image,
-    double confidenceThreshold = 0.20,
+    double confidenceThreshold = 0.25,
   }) async {
     if (!_isModelLoaded || _interpreter == null || _isBusy) {
       return [];
@@ -135,11 +158,11 @@ class YoloService {
 
     _isBusy = true;
     try {
-      ImageConverter.fillPlanarFloat32ListFromImage(
+      final letterbox = ImageConverter.fillPlanarFloat32ListFromImage(
         image,
         _inputBuffer,
-        targetWidth: inputSize,
-        targetHeight: inputSize,
+        targetWidth: _inputWidth,
+        targetHeight: _inputHeight,
       );
 
       _interpreter!.run(_inputBuffer.buffer, _outputBuffer.buffer);
@@ -147,6 +170,7 @@ class YoloService {
       return _parseOutput(
         output: _outputBuffer,
         confidenceThreshold: confidenceThreshold,
+        letterbox: letterbox,
       );
     } catch (e, stack) {
       debugPrint('YoloService error: $e\n$stack');
@@ -159,18 +183,19 @@ class YoloService {
   List<YoloDetection> _parseOutput({
     required Float32List output,
     required double confidenceThreshold,
+    LetterboxInfo? letterbox,
   }) {
     final List<YoloDetection> candidates = [];
     final numClasses = _labels.length;
     double highestScore = 0.0;
     int highestClass = -1;
 
-    for (int i = 0; i < numAnchors; i++) {
+    for (int i = 0; i < _numAnchors; i++) {
       double maxClassScore = 0.0;
       int bestClassIdx = -1;
 
       for (int c = 0; c < numClasses; c++) {
-        final rawScore = output[(4 + c) * numAnchors + i];
+        final rawScore = output[(4 + c) * _numAnchors + i];
         double score = rawScore;
         // If raw score is logit, apply sigmoid
         if (score < 0.0 || score > 1.0) {
@@ -189,17 +214,32 @@ class YoloService {
       }
 
       if (maxClassScore >= confidenceThreshold && bestClassIdx >= 0) {
-        double cx = output[0 * numAnchors + i];
-        double cy = output[1 * numAnchors + i];
-        double w = output[2 * numAnchors + i];
-        double h = output[3 * numAnchors + i];
+        final double cx = output[0 * _numAnchors + i];
+        final double cy = output[1 * _numAnchors + i];
+        final double w = output[2 * _numAnchors + i];
+        final double h = output[3 * _numAnchors + i];
 
-        // Normalize if pixel coordinates (> 1.0)
-        if (cx > 1.0 || cy > 1.0 || w > 1.0 || h > 1.0) {
-          cx /= inputSize;
-          cy /= inputSize;
-          w /= inputSize;
-          h /= inputSize;
+        double normX;
+        double normY;
+        double normW;
+        double normH;
+
+        if (letterbox != null) {
+          // Unpad from letterboxed tensor back to normalized camera frame (0..1)
+          normX = (cx - letterbox.padX) / letterbox.activeWidth;
+          normY = (cy - letterbox.padY) / letterbox.activeHeight;
+          normW = w / letterbox.activeWidth;
+          normH = h / letterbox.activeHeight;
+        } else {
+          normX = cx / _inputWidth;
+          normY = cy / _inputHeight;
+          normW = w / _inputWidth;
+          normH = h / _inputHeight;
+        }
+
+        // Only accept detections that fall within the active camera bounds
+        if (normX < -0.1 || normX > 1.1 || normY < -0.1 || normY > 1.1) {
+          continue;
         }
 
         final rawClassName = _labels[bestClassIdx];
@@ -211,10 +251,10 @@ class YoloService {
             className: rawClassName,
             displayName: displayName,
             confidence: maxClassScore,
-            x: cx.clamp(0.0, 1.0),
-            y: cy.clamp(0.0, 1.0),
-            width: w.clamp(0.0, 1.0),
-            height: h.clamp(0.0, 1.0),
+            x: normX.clamp(0.0, 1.0),
+            y: normY.clamp(0.0, 1.0),
+            width: normW.clamp(0.0, 1.0),
+            height: normH.clamp(0.0, 1.0),
           ),
         );
       }
@@ -226,27 +266,31 @@ class YoloService {
 
     if (candidates.isEmpty) return [];
 
+    // Sort by confidence descending
     candidates.sort((a, b) => b.confidence.compareTo(a.confidence));
-    return _applyNms(candidates, iouThreshold: 0.45);
+
+    // Apply strict cross-class NMS to guarantee only 1 label per physical item
+    return _applyCrossClassNms(candidates, iouThreshold: 0.45);
   }
 
-  List<YoloDetection> _applyNms(List<YoloDetection> boxes, {double iouThreshold = 0.45}) {
+  /// Cross-class NMS: If any two candidate bounding boxes overlap by > iouThreshold,
+  /// keep ONLY the one with the higher confidence score.
+  /// Prevents multiple labels from ever appearing over the same detected product.
+  List<YoloDetection> _applyCrossClassNms(List<YoloDetection> boxes, {double iouThreshold = 0.45}) {
     final List<YoloDetection> selected = [];
 
     for (final box in boxes) {
       bool keep = true;
       for (final kept in selected) {
-        if (box.classIndex == kept.classIndex) {
-          final iou = _calculateIoU(box, kept);
-          if (iou > iouThreshold) {
-            keep = false;
-            break;
-          }
+        final iou = _calculateIoU(box, kept);
+        if (iou > iouThreshold) {
+          keep = false;
+          break;
         }
       }
       if (keep) {
         selected.add(box);
-        if (selected.length >= 8) break;
+        if (selected.length >= 5) break;
       }
     }
 
@@ -337,7 +381,9 @@ class YoloService {
   }
 
   void dispose() {
-    _interpreter?.close();
+    try {
+      _interpreter?.close();
+    } catch (_) {}
     _interpreter = null;
     _isModelLoaded = false;
   }

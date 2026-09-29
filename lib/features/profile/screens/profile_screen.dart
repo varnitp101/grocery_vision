@@ -363,11 +363,10 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ),
         content: Text(
-          'Grocery Vision uses Gemini AI to instantly identify grocery products by photo. '
-          'Just point your camera, double-tap, and get detailed product information including '
-          'nutrition facts, ingredients, and allergen warnings.\n\n'
+          'Grocery Vision uses YOLO real-time object detection, barcode scanning, and OCR extraction for Grocery Item Identification. '
+          'Designed for visually impaired users to shop independently, providing instant auditory feedback, allergen warnings, and ingredient details.\n\n'
           'Version 1.0.0\n'
-          'Powered by Google Gemini 2.5 Flash',
+          'CMRIT Final Year B.E. Major Project',
           style: TextStyle(
             color: isDark ? Colors.white70 : Colors.black54,
             height: 1.5,

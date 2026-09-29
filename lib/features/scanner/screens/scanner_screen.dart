@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../models/yolo_detection.dart';
 import 'product_result_screen.dart';
 import 'scan_error_screen.dart';
+import '../../../services/tts_service.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({super.key});
@@ -46,10 +47,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   @override
   void dispose() {
+    ref.read(ttsServiceProvider).stop();
     _pulseController.dispose();
     _analyzeSpinController.dispose();
     _progressController.dispose();
-    ref.read(scannerControllerProvider.notifier).pauseScanning();
     super.dispose();
   }
 
@@ -74,7 +75,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       if (next.phase == ScanPhase.productFound && next.scannedProduct != null) {
         _hasNavigated = true;
-        ref.read(scannerControllerProvider.notifier).pauseScanning();
+        if (mounted) {
+          ref.read(scannerControllerProvider.notifier).pauseScanning();
+        }
         Navigator.of(context)
             .push(
           MaterialPageRoute(
@@ -86,18 +89,24 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         )
             .then((_) {
           _hasNavigated = false;
-          ref.read(scannerControllerProvider.notifier).resetScanner();
+          if (mounted) {
+            ref.read(scannerControllerProvider.notifier).resetScanner();
+          }
         });
       } else if (next.phase == ScanPhase.notFound || next.phase == ScanPhase.error) {
         _hasNavigated = true;
-        ref.read(scannerControllerProvider.notifier).pauseScanning();
+        if (mounted) {
+          ref.read(scannerControllerProvider.notifier).pauseScanning();
+        }
         Navigator.of(context)
             .push(
           MaterialPageRoute(builder: (_) => const ScanErrorScreen()),
         )
             .then((_) {
           _hasNavigated = false;
-          ref.read(scannerControllerProvider.notifier).resetScanner();
+          if (mounted) {
+            ref.read(scannerControllerProvider.notifier).resetScanner();
+          }
         });
       }
     });
@@ -106,6 +115,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
+          ref.read(ttsServiceProvider).stop();
           ref.read(scannerControllerProvider.notifier).pauseScanning();
         }
       },
@@ -145,94 +155,57 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   }
 
   Widget _buildIdleOverlay(BuildContext context) {
-    return Stack(
-      children: [
-        Center(
-          child: SizedBox(
-            width: 280,
-            height: 280,
-            child: Stack(
-              children: [
-                Align(alignment: Alignment.topLeft, child: _buildCorner(top: true, left: true)),
-                Align(alignment: Alignment.topRight, child: _buildCorner(top: true, left: false)),
-                Align(alignment: Alignment.bottomLeft, child: _buildCorner(top: false, left: true)),
-                Align(alignment: Alignment.bottomRight, child: _buildCorner(top: false, left: false)),
-                AnimatedBuilder(
-                  animation: _pulseController,
-                  builder: (context, _) {
-                    return Positioned(
-                      top: 20 + (_pulseController.value * 240),
-                      left: 20,
-                      right: 20,
-                      child: Container(
-                        height: 3,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.transparent,
-                              AppTheme.primaryAmber.withAlpha(200),
-                              AppTheme.primaryAmber,
-                              AppTheme.primaryAmber.withAlpha(200),
-                              Colors.transparent,
-                            ],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primaryAmber.withAlpha(100),
-                              blurRadius: 12,
-                              spreadRadius: 4,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
+    return Positioned(
+      top: MediaQuery.of(context).padding.top + 16,
+      left: 20,
+      right: 20,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.black.withAlpha(190),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.primaryAmber.withAlpha(80), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(120),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
             ),
-          ),
+          ],
         ),
-
-        // Header instructions
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 24,
-          left: 24,
-          right: 24,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            decoration: BoxDecoration(
-              color: Colors.black.withAlpha(200),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.primaryAmber.withAlpha(80)),
-            ),
-            child: const Column(
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Icon(Icons.auto_awesome, color: AppTheme.primaryAmber, size: 22),
+                SizedBox(width: 8),
                 Text(
-                  'POINT AT PRODUCT',
-                  textAlign: TextAlign.center,
+                  'AI VISION SCANNER',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
+                    color: AppTheme.primaryAmber,
+                    fontSize: 16,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 2.0,
                   ),
                 ),
-                SizedBox(height: 6),
-                Text(
-                  'DOUBLE TAP ANYWHERE TO SCAN',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
-                  ),
-                ),
               ],
             ),
-          ),
+            SizedBox(height: 6),
+            Text(
+              'Live Detection Active • Double Tap Anywhere To Scan',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -299,137 +272,231 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     );
   }
 
-  /// High-contrast accessible choice buttons when barcode is missing
+  /// High-contrast accessible choice buttons when barcode is missing (Split Left / Right layout)
   Widget _buildBarcodeChoiceOverlay(BuildContext context) {
     return Container(
-      color: const Color(0xEA0A0F1C),
+      color: const Color(0xF20A0F1C),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Spacer(),
+              // Header Card
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: const Color(0xFF132F4C),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withAlpha(30)),
+                  border: Border.all(color: Colors.white.withAlpha(40)),
                 ),
                 child: const Column(
                   children: [
                     Icon(
                       Icons.barcode_reader,
                       color: AppTheme.primaryAmber,
-                      size: 56,
+                      size: 44,
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: 10),
                     Text(
                       'Barcode Not Detected',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: 6),
                     Text(
-                      'Would you like to try scanning the barcode again, or fetch details using AI web vision?',
+                      'Double tap the LEFT side to scan barcode again,\nor double tap the RIGHT side to search through OCR.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white70,
-                        fontSize: 15,
-                        height: 1.4,
+                        fontSize: 14,
+                        height: 1.35,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Spacer(),
+              const SizedBox(height: 18),
 
-              // Button 1: Scan Barcode Again
-              Semantics(
-                label: 'Scan Barcode Again. Returns to live camera.',
-                button: true,
-                child: SizedBox(
-                  height: 68,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withAlpha(20),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      side: const BorderSide(color: Colors.white54, width: 2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+              // Split Left / Right Touch Panels
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // LEFT HALF: SCAN BARCODE AGAIN
+                    Expanded(
+                      child: Semantics(
+                        label: 'Scan Barcode Again. Left half of screen. Double tap here to retry barcode scan.',
+                        button: true,
+                        child: GestureDetector(
+                          onTap: () {
+                            ref.read(ttsServiceProvider).stop();
+                            ref.read(scannerControllerProvider.notifier).scanBarcodeAgain();
+                          },
+                          onDoubleTap: () {
+                            ref.read(ttsServiceProvider).stop();
+                            ref.read(scannerControllerProvider.notifier).scanBarcodeAgain();
+                          },
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E293B),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: AppTheme.primaryAmber.withAlpha(120), width: 2.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(100),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const CircleAvatar(
+                                  radius: 36,
+                                  backgroundColor: Colors.white12,
+                                  child: Icon(Icons.refresh_rounded, size: 44, color: AppTheme.primaryAmber),
+                                ),
+                                const SizedBox(height: 20),
+                                const Text(
+                                  'SCAN BARCODE\nAGAIN',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2,
+                                    height: 1.25,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white10,
+                                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  ),
+                                  child: const Text(
+                                    'LEFT SIDE',
+                                    style: TextStyle(
+                                      color: AppTheme.primaryAmber,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    onPressed: () {
-                      ref.read(scannerControllerProvider.notifier).scanBarcodeAgain();
-                    },
-                    icon: const Icon(Icons.refresh, size: 28),
-                    label: const Text(
-                      'SCAN BARCODE AGAIN',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2,
+
+                    // RIGHT HALF: SEARCH THROUGH OCR
+                    Expanded(
+                      child: Semantics(
+                        label: 'Search through OCR. Right half of screen. Double tap here to extract packaging text and details.',
+                        button: true,
+                        child: GestureDetector(
+                          onTap: () {
+                            ref.read(ttsServiceProvider).stop();
+                            ref.read(scannerControllerProvider.notifier).searchThroughOcr();
+                          },
+                          onDoubleTap: () {
+                            ref.read(ttsServiceProvider).stop();
+                            ref.read(scannerControllerProvider.notifier).searchThroughOcr();
+                          },
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            margin: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryAmber,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.primaryAmber.withAlpha(60),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const CircleAvatar(
+                                  radius: 36,
+                                  backgroundColor: AppTheme.darkNavy,
+                                  child: Icon(Icons.document_scanner_rounded, size: 40, color: AppTheme.primaryAmber),
+                                ),
+                                const SizedBox(height: 20),
+                                const Text(
+                                  'SEARCH\nTHROUGH OCR',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: AppTheme.darkNavy,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2,
+                                    height: 1.25,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: const BoxDecoration(
+                                    color: AppTheme.darkNavy,
+                                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  ),
+                                  child: const Text(
+                                    'RIGHT SIDE',
+                                    style: TextStyle(
+                                      color: AppTheme.primaryAmber,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Dismiss / Cancel Button
+              SizedBox(
+                height: 48,
+                child: TextButton.icon(
+                  onPressed: () {
+                    ref.read(ttsServiceProvider).stop();
+                    ref.read(scannerControllerProvider.notifier).resetScanner();
+                  },
+                  icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+                  label: const Text(
+                    'Dismiss and Resume Camera',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Button 2: Get Details from Web (Gemini)
-              Semantics(
-                label: 'Get Details from Web. Uses AI to analyze the full captured image.',
-                button: true,
-                child: SizedBox(
-                  height: 68,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryAmber,
-                      foregroundColor: AppTheme.darkNavy,
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    onPressed: () {
-                      ref.read(scannerControllerProvider.notifier).getDetailsFromWeb();
-                    },
-                    icon: const Icon(Icons.auto_awesome, size: 28),
-                    label: const Text(
-                      'GET DETAILS FROM WEB',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Cancel button
-              TextButton(
-                onPressed: () {
-                  ref.read(scannerControllerProvider.notifier).resetScanner();
-                },
-                child: const Text(
-                  'Dismiss and Resume',
-                  style: TextStyle(
-                    color: Colors.white60,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -502,7 +569,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                           ),
                         ),
                         child: const Icon(
-                          Icons.auto_awesome,
+                          Icons.document_scanner_rounded,
                           color: AppTheme.primaryAmber,
                           size: 48,
                         ),
@@ -514,20 +581,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             ),
             const SizedBox(height: 48),
             const Text(
-              'AI VISUAL SEARCH',
+              'OCR PACKAGING EXTRACTION',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 28,
+                fontSize: 24,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 4.0,
+                letterSpacing: 2.5,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Analyzing packaging and text details...',
+              'Reading packaging text, brand, and ingredients via OCR...',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white.withAlpha(150),
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -535,7 +603,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 48),
               child: Text(
-                'Searching across grocery database and web...',
+                'Matching extracted OCR text with grocery item repository...',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white.withAlpha(100),
@@ -560,6 +628,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         label: 'Cancel scanning',
         child: GestureDetector(
           onTap: () {
+            ref.read(ttsServiceProvider).stop();
             ref.read(scannerControllerProvider.notifier).pauseScanning();
             Navigator.of(context).pop();
           },
@@ -599,41 +668,23 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       ),
     );
   }
-
-  Widget _buildCorner({required bool top, required bool left}) {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        border: Border(
-          top: top
-              ? const BorderSide(color: AppTheme.primaryAmber, width: 5)
-              : BorderSide.none,
-          bottom: !top
-              ? const BorderSide(color: AppTheme.primaryAmber, width: 5)
-              : BorderSide.none,
-          left: left
-              ? const BorderSide(color: AppTheme.primaryAmber, width: 5)
-              : BorderSide.none,
-          right: !left
-              ? const BorderSide(color: AppTheme.primaryAmber, width: 5)
-              : BorderSide.none,
-        ),
-      ),
-    );
-  }
 }
 
 class _YoloBoundingBoxPainter extends CustomPainter {
   final List<YoloDetection> detections;
   final Size screenSize;
+  final double cameraAspectRatio;
 
-  _YoloBoundingBoxPainter({required this.detections, required this.screenSize});
+  _YoloBoundingBoxPainter({
+    required this.detections,
+    required this.screenSize,
+    this.cameraAspectRatio = 4 / 3,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     for (final detection in detections) {
-      final rect = detection.toRect(screenSize);
+      final rect = detection.toRect(screenSize, cameraAspectRatio: cameraAspectRatio);
 
       // Box border
       final boxPaint = Paint()
@@ -687,7 +738,9 @@ class _YoloBoundingBoxPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _YoloBoundingBoxPainter oldDelegate) {
-    return oldDelegate.detections != detections;
+    return oldDelegate.detections != detections ||
+        oldDelegate.screenSize != screenSize ||
+        oldDelegate.cameraAspectRatio != cameraAspectRatio;
   }
 }
 
@@ -711,18 +764,21 @@ class _CameraPreviewLayer extends ConsumerWidget {
     if (isInitialized && camera != null && camera.value.isInitialized) {
       return LayoutBuilder(
         builder: (context, constraints) {
+          final cameraAspect = camera.value.aspectRatio;
+          final screenAspect = constraints.maxWidth / constraints.maxHeight;
+          var scale = 1.0;
+          if (screenAspect < 1.0) {
+            scale = 1.0 / (cameraAspect * screenAspect);
+          } else {
+            scale = cameraAspect / screenAspect;
+          }
+          if (scale < 1.0) scale = 1.0 / scale;
+
           return ClipRect(
-            child: OverflowBox(
-              alignment: Alignment.center,
-              maxWidth: double.infinity,
-              maxHeight: double.infinity,
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: constraints.maxWidth,
-                  height: constraints.maxWidth * camera.value.aspectRatio,
-                  child: CameraPreview(camera),
-                ),
+            child: Transform.scale(
+              scale: scale,
+              child: Center(
+                child: CameraPreview(camera),
               ),
             ),
           );
@@ -753,6 +809,11 @@ class _YoloDetectionsLayer extends ConsumerWidget {
     );
     if (detections.isEmpty) return const SizedBox.shrink();
 
+    final camera = ref.watch(
+      scannerControllerProvider.select((s) => s.controller),
+    );
+    final cameraAspectRatio = camera?.value.aspectRatio ?? (4 / 3);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return CustomPaint(
@@ -760,6 +821,7 @@ class _YoloDetectionsLayer extends ConsumerWidget {
           painter: _YoloBoundingBoxPainter(
             detections: detections,
             screenSize: Size(constraints.maxWidth, constraints.maxHeight),
+            cameraAspectRatio: cameraAspectRatio,
           ),
         );
       },

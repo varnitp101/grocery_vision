@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../services/tts_service.dart';
 
 class LightingHelperScreen extends StatefulWidget {
   const LightingHelperScreen({super.key});
@@ -27,6 +28,7 @@ class _LightingHelperScreenState extends State<LightingHelperScreen> with Single
 
   @override
   void dispose() {
+    TtsService().stop();
     _pulseController.dispose();
     super.dispose();
   }
@@ -300,6 +302,7 @@ class _LightingHelperScreenState extends State<LightingHelperScreen> with Single
                   height: 64,
                   child: ElevatedButton(
                     onPressed: () {
+                      TtsService().stop();
                       Navigator.of(context).pop();
                     },
                     style: ElevatedButton.styleFrom(

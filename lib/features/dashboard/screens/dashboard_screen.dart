@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'home_screen.dart';
 import '../../history/screens/history_screen.dart';
 import '../../cart/screens/cart_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 import '../../settings/screens/settings_screen.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../services/tts_service.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   final int initialIndex;
   const DashboardScreen({super.key, this.initialIndex = 0});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   late int _currentIndex;
 
   @override
@@ -52,6 +54,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
           onTap: (index) {
+            ref.read(ttsServiceProvider).stop();
             setState(() {
               _currentIndex = index;
             });

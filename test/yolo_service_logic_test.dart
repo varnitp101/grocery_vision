@@ -11,10 +11,10 @@ void main() {
     });
 
     test('Temporal stability requires 2 consecutive frames of same class', () {
-      const detectionBhujiya = YoloDetection(
+      const detectionChaizop = YoloDetection(
         classIndex: 0,
-        className: 'bhujiya',
-        displayName: 'Bhujiya',
+        className: 'Chaizop Tea Mix',
+        displayName: 'Chaizop Tea Mix',
         confidence: 0.85,
         x: 0.5,
         y: 0.5,
@@ -23,20 +23,20 @@ void main() {
       );
 
       // Frame 1: 1 hit -> null
-      expect(yoloService.processTemporalStability([detectionBhujiya]), isNull);
+      expect(yoloService.processTemporalStability([detectionChaizop]), isNull);
 
-      // Frame 2: 2 hits -> returns "Bhujiya"
-      expect(yoloService.processTemporalStability([detectionBhujiya]), 'Bhujiya');
+      // Frame 2: 2 hits -> returns "Chaizop Tea Mix"
+      expect(yoloService.processTemporalStability([detectionChaizop]), 'Chaizop Tea Mix');
 
       // Frame 3: 3 hits (duplicate suppression) -> null
-      expect(yoloService.processTemporalStability([detectionBhujiya]), isNull);
+      expect(yoloService.processTemporalStability([detectionChaizop]), isNull);
     });
 
     test('Switching candidate class resets consecutive hits counter', () {
-      const detectionDorito = YoloDetection(
+      const detectionBourbon = YoloDetection(
         classIndex: 1,
-        className: 'dorito',
-        displayName: 'Dorito',
+        className: 'Dark Fantasy Bourbon',
+        displayName: 'Dark Fantasy Bourbon',
         confidence: 0.80,
         x: 0.5,
         y: 0.5,
@@ -44,10 +44,10 @@ void main() {
         height: 0.4,
       );
 
-      const detectionMaggie = YoloDetection(
+      const detectionCreme = YoloDetection(
         classIndex: 2,
-        className: 'maggie_masala',
-        displayName: 'Maggie Masala',
+        className: 'Dark Fantasy Sandwich Creme',
+        displayName: 'Dark Fantasy Sandwich Creme',
         confidence: 0.75,
         x: 0.5,
         y: 0.5,
@@ -55,20 +55,20 @@ void main() {
         height: 0.4,
       );
 
-      // 1 hit of Dorito
-      expect(yoloService.processTemporalStability([detectionDorito]), isNull);
+      // 1 hit of Bourbon
+      expect(yoloService.processTemporalStability([detectionBourbon]), isNull);
 
-      // Switch to Maggie -> resets counter
-      expect(yoloService.processTemporalStability([detectionMaggie]), isNull);
-      // 2nd hit of Maggie -> triggers announcement
-      expect(yoloService.processTemporalStability([detectionMaggie]), 'Maggie Masala');
+      // Switch to Creme -> resets counter
+      expect(yoloService.processTemporalStability([detectionCreme]), isNull);
+      // 2nd hit of Creme -> triggers announcement
+      expect(yoloService.processTemporalStability([detectionCreme]), 'Dark Fantasy Sandwich Creme');
     });
 
     test('Empty detections reset candidate counter', () {
-      const detectionBhujiya = YoloDetection(
+      const detectionChaizop = YoloDetection(
         classIndex: 0,
-        className: 'bhujiya',
-        displayName: 'Bhujiya',
+        className: 'Chaizop Tea Mix',
+        displayName: 'Chaizop Tea Mix',
         confidence: 0.85,
         x: 0.5,
         y: 0.5,
@@ -76,14 +76,14 @@ void main() {
         height: 0.4,
       );
 
-      expect(yoloService.processTemporalStability([detectionBhujiya]), isNull);
+      expect(yoloService.processTemporalStability([detectionChaizop]), isNull);
 
       // Empty frame
       expect(yoloService.processTemporalStability([]), isNull);
 
-      // Next frame of Bhujiya starts from 1 again
-      expect(yoloService.processTemporalStability([detectionBhujiya]), isNull);
-      expect(yoloService.processTemporalStability([detectionBhujiya]), 'Bhujiya');
+      // Next frame of Chaizop starts from 1 again
+      expect(yoloService.processTemporalStability([detectionChaizop]), isNull);
+      expect(yoloService.processTemporalStability([detectionChaizop]), 'Chaizop Tea Mix');
     });
   });
 }

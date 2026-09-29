@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import '../../../models/product_model.dart';
+import '../../../services/tts_service.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final Product product;
@@ -18,7 +18,7 @@ class ProductDetailsScreen extends StatefulWidget {
 }
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
-  final FlutterTts _tts = FlutterTts();
+  final TtsService _tts = TtsService();
 
   @override
   void initState() {
@@ -34,7 +34,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         '${widget.product.usageInstructions != null ? "Usage: ${widget.product.usageInstructions}. " : ""}'
         '${widget.product.isFood && widget.product.allergens.isNotEmpty ? "Contains allergens: ${widget.product.allergens.join(', ')}. " : ""}'
         '${widget.product.isFood ? "Ingredients: ${widget.product.ingredients}." : ""}';
-    await _tts.speak(announcement);
+    await _tts.speak(announcement, priority: TtsPriority.immediate);
   }
 
   @override
@@ -56,31 +56,58 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           children: [
 
             Container(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               decoration: BoxDecoration(
                 border: Border(bottom: BorderSide(color: surfaceNavy.withAlpha(128))),
               ),
               child: Column(
                 children: [
+                  Row(
+                    children: [
+                      Semantics(
+                        button: true,
+                        label: 'Back',
+                        child: GestureDetector(
+                          onTap: () {
+                            _tts.stop();
+                            Navigator.of(context).pop();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: surfaceNavy,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white.withAlpha(25)),
+                            ),
+                            child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 22),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          widget.product.brand.toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: primaryAmber.withAlpha(200),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 44),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   Text(
                     widget.product.name,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 32,
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                       letterSpacing: -0.5,
                       height: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.product.brand.toUpperCase(),
-                    style: TextStyle(
-                      color: primaryAmber.withAlpha(200),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2.0,
                     ),
                   ),
                 ],
@@ -373,10 +400,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.language_rounded, color: primaryAmber, size: 28),
+                              const Icon(Icons.lightbulb_rounded, color: primaryAmber, size: 28),
                               const SizedBox(width: 12),
                               Text(
-                                'WEB KNOWLEDGE',
+                                'PRODUCT INSIGHTS',
                                 style: TextStyle(
                                   color: primaryAmber,
                                   fontSize: 16,

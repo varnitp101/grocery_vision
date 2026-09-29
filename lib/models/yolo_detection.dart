@@ -21,13 +21,37 @@ class YoloDetection {
     required this.height,
   });
 
-  /// Convert normalized bounding box to screen Rect
-  Rect toRect(Size screenSize) {
-    final left = (x - width / 2).clamp(0.0, 1.0) * screenSize.width;
-    final top = (y - height / 2).clamp(0.0, 1.0) * screenSize.height;
-    final rectWidth = width.clamp(0.0, 1.0) * screenSize.width;
-    final rectHeight = height.clamp(0.0, 1.0) * screenSize.height;
-    return Rect.fromLTWH(left, top, rectWidth, rectHeight);
+  /// Convert normalized bounding box (0..1 relative to camera frame) to screen Rect matching BoxFit.cover
+  Rect toRect(Size screenSize, {double cameraAspectRatio = 4 / 3}) {
+    final screenRatio = screenSize.height / screenSize.width;
+    double renderedW;
+    double renderedH;
+    double offsetX = 0.0;
+    double offsetY = 0.0;
+
+    if (screenRatio > cameraAspectRatio) {
+      // Screen is taller than camera preview -> camera fills height, cropped horizontally
+      renderedH = screenSize.height;
+      renderedW = screenSize.height / cameraAspectRatio;
+      offsetX = (renderedW - screenSize.width) / 2.0;
+    } else {
+      // Screen is wider than camera preview -> camera fills width, cropped vertically
+      renderedW = screenSize.width;
+      renderedH = screenSize.width * cameraAspectRatio;
+      offsetY = (renderedH - screenSize.height) / 2.0;
+    }
+
+    final boxW = width * renderedW;
+    final boxH = height * renderedH;
+    final left = x * renderedW - boxW / 2.0 - offsetX;
+    final top = y * renderedH - boxH / 2.0 - offsetY;
+
+    return Rect.fromLTWH(
+      left.clamp(0.0, screenSize.width),
+      top.clamp(0.0, screenSize.height),
+      boxW.clamp(0.0, screenSize.width),
+      boxH.clamp(0.0, screenSize.height),
+    );
   }
 
   @override

@@ -9,8 +9,8 @@ enum TtsPriority {
 }
 
 class TtsService {
-  final FlutterTts _flutterTts = FlutterTts();
-  bool _isInitialized = false;
+  static final FlutterTts _flutterTts = FlutterTts();
+  static bool _isInitialized = false;
   double _speechRate = 0.55;
   double _speechPitch = 1.0;
   final double _speechVolume = 1.0;

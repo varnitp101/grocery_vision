@@ -1,11 +1,9 @@
-
-path: /content/data
-
-train: train/images
-val: val/images
-test: test/images
-
+path: .
+train: dataset/images/train
+val: dataset/images/val
+nc: 4
 names:
-  0: bhujiya
-  1: dorito
-  2: maggie_masala
+  0: Chaizop Tea Mix
+  1: Dark Fantasy Bourbon
+  2: Dark Fantasy Sandwich Creme
+  3: WishCare Shampoo

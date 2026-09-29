@@ -126,5 +126,61 @@
     "shelf_life": "24 months from packaging",
     "description": "Iodized vacuum evaporated salt ensuring purity and guaranteed iodine.",
     "usage_instructions": "Use as a seasoning in cooking."
+  },
+  "8901030895551": {
+    "barcode": "8901030895551",
+    "name": "Dark Fantasy Bourbon",
+    "brand": "Sunfeast",
+    "category": "Biscuits & Cookies",
+    "net_quantity": "150g",
+    "mrp": 35.0,
+    "price": 35.0,
+    "ingredients": ["Refined Wheat Flour", "Sugar", "Hydrogenated Vegetable Oil", "Cocoa Solids", "Invert Sugar Syrup", "Raising Agents", "Edible Common Salt"],
+    "allergens": "Contains wheat. May contain milk and nuts.",
+    "shelf_life": "6 months from packaging",
+    "description": "Crispy rich chocolate biscuits filled with decadent chocolate cream and sugar sprinkled on top.",
+    "usage_instructions": "Ready to eat chocolate cream biscuit snack."
+  },
+  "8901030829877": {
+    "barcode": "8901030829877",
+    "name": "Dark Fantasy Sandwich Creme",
+    "brand": "Sunfeast",
+    "category": "Biscuits & Cookies",
+    "net_quantity": "100g",
+    "mrp": 40.0,
+    "price": 40.0,
+    "ingredients": ["Wheat Flour", "Sugar", "Refined Palm Oil", "Cocoa Solids", "Choco Creme Filling", "Milk Solids", "Emulsifiers"],
+    "allergens": "Contains wheat, milk, and soy.",
+    "shelf_life": "6 months from packaging",
+    "description": "Deliciously crispy cookie shells encasing a luxurious and silky melt-in-mouth choco creme centre.",
+    "usage_instructions": "Ready to eat. Enjoy with milk or as a standalone dessert snack."
+  },
+  "8906132690014": {
+    "barcode": "8906132690014",
+    "name": "WishCare Shampoo",
+    "brand": "WishCare",
+    "category": "Personal Care & Haircare",
+    "net_quantity": "300ml",
+    "mrp": 499.0,
+    "price": 449.0,
+    "ingredients": ["Fermented Rice Water", "Keratin", "Vitamin E", "Coconut Oil", "Almond Oil", "Aqua", "Mild Cleansing Bases"],
+    "allergens": "Sulphate-free, paraben-free, cruelty-free.",
+    "shelf_life": "24 months from packaging",
+    "description": "Nourishing and restorative hair growth shampoo enriched with fermented rice water and plant keratin.",
+    "usage_instructions": "Apply to wet hair, massage gently onto scalp and roots, then rinse thoroughly with water."
+  },
+  "8908012345012": {
+    "barcode": "8908012345012",
+    "name": "Chaizop Tea Mix",
+    "brand": "Chaizop",
+    "category": "Beverages & Tea",
+    "net_quantity": "140g",
+    "mrp": 120.0,
+    "price": 110.0,
+    "ingredients": ["Tea Extract", "Dairy Whitener (Milk Solids, Sugar)", "Natural Cardamom & Ginger Spice Blend", "Sugar"],
+    "allergens": "Contains milk.",
+    "shelf_life": "12 months from packaging",
+    "description": "Premium instant premix tea blend with authentic aromatic Indian spices for quick and refreshing chai.",
+    "usage_instructions": "Empty one sachet into a cup, add 100ml hot water, stir well and enjoy instant authentic chai."
   }
 }
