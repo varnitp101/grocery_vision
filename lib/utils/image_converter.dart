@@ -361,6 +361,123 @@ class ImageConverter {
     );
   }
 
+  /// Converts a live CameraImage into compressed JPEG bytes with correct rotation
+  static Uint8List? convertCameraImageToJpeg(
+    CameraImage cameraImage, {
+    int sensorOrientation = 90,
+  }) {
+    try {
+      final int srcWidth = cameraImage.width;
+      final int srcHeight = cameraImage.height;
+
+      final bool isRotated = sensorOrientation == 90 || sensorOrientation == 270;
+      final int outWidth = isRotated ? srcHeight : srcWidth;
+      final int outHeight = isRotated ? srcWidth : srcHeight;
+
+      final img.Image outImage = img.Image(width: outWidth, height: outHeight);
+
+      if (cameraImage.format.group == ImageFormatGroup.yuv420 && cameraImage.planes.length >= 3) {
+        final planeY = cameraImage.planes[0];
+        final planeU = cameraImage.planes[1];
+        final planeV = cameraImage.planes[2];
+
+        final Uint8List yBytes = planeY.bytes;
+        final Uint8List uBytes = planeU.bytes;
+        final Uint8List vBytes = planeV.bytes;
+
+        final int yRowStride = planeY.bytesPerRow;
+        final int yPixelStride = planeY.bytesPerPixel ?? 1;
+        final int uRowStride = planeU.bytesPerRow;
+        final int uPixelStride = planeU.bytesPerPixel ?? 1;
+        final int vRowStride = planeV.bytesPerRow;
+        final int vPixelStride = planeV.bytesPerPixel ?? 1;
+
+        for (int sy = 0; sy < srcHeight; sy++) {
+          final int yRow = sy * yRowStride;
+          final int uvY = sy >> 1;
+          final int uvURow = uvY * uRowStride;
+          final int uvVRow = uvY * vRowStride;
+
+          for (int sx = 0; sx < srcWidth; sx++) {
+            final int yIdx = yRow + sx * yPixelStride;
+            final int uvX = sx >> 1;
+            final int uIdx = uvURow + uvX * uPixelStride;
+            final int vIdx = uvVRow + uvX * vPixelStride;
+
+            if (yIdx >= yBytes.length || uIdx >= uBytes.length || vIdx >= vBytes.length) continue;
+
+            final int y = yBytes[yIdx];
+            final int u = uBytes[uIdx];
+            final int v = vBytes[vIdx];
+
+            final int r = (y + _vToR[v]).clamp(0, 255);
+            final int g = (y - _uToG[u] - _vToG[v]).clamp(0, 255);
+            final int b = (y + _uToB[u]).clamp(0, 255);
+
+            int dx, dy;
+            if (sensorOrientation == 90) {
+              dx = srcHeight - 1 - sy;
+              dy = sx;
+            } else if (sensorOrientation == 270) {
+              dx = sy;
+              dy = srcWidth - 1 - sx;
+            } else if (sensorOrientation == 180) {
+              dx = srcWidth - 1 - sx;
+              dy = srcHeight - 1 - sy;
+            } else {
+              dx = sx;
+              dy = sy;
+            }
+
+            outImage.setPixelRgb(dx, dy, r, g, b);
+          }
+        }
+
+        return Uint8List.fromList(img.encodeJpg(outImage, quality: 85));
+      }
+
+      if (cameraImage.format.group == ImageFormatGroup.bgra8888) {
+        final plane = cameraImage.planes[0];
+        final bytes = plane.bytes;
+        final rowStride = plane.bytesPerRow;
+
+        for (int sy = 0; sy < srcHeight; sy++) {
+          for (int sx = 0; sx < srcWidth; sx++) {
+            final int idx = sy * rowStride + sx * 4;
+            if (idx + 3 >= bytes.length) continue;
+
+            final int b = bytes[idx];
+            final int g = bytes[idx + 1];
+            final int r = bytes[idx + 2];
+
+            int dx, dy;
+            if (sensorOrientation == 90) {
+              dx = srcHeight - 1 - sy;
+              dy = sx;
+            } else if (sensorOrientation == 270) {
+              dx = sy;
+              dy = srcWidth - 1 - sx;
+            } else if (sensorOrientation == 180) {
+              dx = srcWidth - 1 - sx;
+              dy = srcHeight - 1 - sy;
+            } else {
+              dx = sx;
+              dy = sy;
+            }
+
+            outImage.setPixelRgb(dx, dy, r, g, b);
+          }
+        }
+
+        return Uint8List.fromList(img.encodeJpg(outImage, quality: 85));
+      }
+
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Decodes JPEG/PNG bytes into img.Image
   static img.Image? decodeImageBytes(Uint8List bytes) {
     return img.decodeImage(bytes);

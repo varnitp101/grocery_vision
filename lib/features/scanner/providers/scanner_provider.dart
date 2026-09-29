@@ -13,6 +13,8 @@ import '../../../services/haptic_service.dart';
 import '../../../services/local_history_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/yolo_service.dart';
+import '../../../utils/image_converter.dart';
+import 'package:path_provider/path_provider.dart';
 
 enum ScanPhase {
   idle,
@@ -90,6 +92,7 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
   static const int inferenceThrottleMs = 150;
 
   Timer? _silenceTimer;
+  Completer<Uint8List>? _frameCaptureCompleter;
 
   YoloService get _yolo => _ref.read(yoloServiceProvider);
   BarcodeService get _barcode => _ref.read(barcodeServiceProvider);
@@ -239,6 +242,23 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
   }
 
   void _onFrameReceived(CameraImage image) async {
+    final sensorOrientation = _cameraDescription?.sensorOrientation ?? 90;
+
+    // Check if an instant frame capture was requested (via double tap)
+    if (_frameCaptureCompleter != null && !_frameCaptureCompleter!.isCompleted) {
+      try {
+        final jpeg = ImageConverter.convertCameraImageToJpeg(
+          image,
+          sensorOrientation: sensorOrientation,
+        );
+        if (jpeg != null) {
+          _frameCaptureCompleter!.complete(jpeg);
+        }
+      } catch (e) {
+        debugPrint('Error converting live frame: $e');
+      }
+    }
+
     // Drop frame immediately if previous inference is still active
     if (_isProcessingFrame || state.phase != ScanPhase.idle || !_isStreaming) return;
 
@@ -250,7 +270,6 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
     _lastFrameInferenceTime = now;
 
     try {
-      final sensorOrientation = _cameraDescription?.sensorOrientation ?? 90;
       final detections = await _yolo.detectFromCameraImage(
         image,
         sensorOrientation: sensorOrientation,
@@ -303,10 +322,6 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
     _isBusy = true;
 
     try {
-      await pauseScanning();
-      // Allow CameraX hardware pipeline to settle after stopping stream
-      await Future.delayed(const Duration(milliseconds: 100));
-
       await _haptic.captureTriggered();
       await _tts.speak('Checking product...', priority: TtsPriority.immediate);
 
@@ -318,28 +333,54 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
         captureProgress: 0.2,
       );
 
-      final ctrl = state.controller;
-      if (ctrl == null || !ctrl.value.isInitialized) {
+      Uint8List? bytes;
+      String? imagePath;
+
+      // 1. Instant crash-free capture from live camera stream (no hardware session reconfigure)
+      _frameCaptureCompleter = Completer<Uint8List>();
+      try {
+        bytes = await _frameCaptureCompleter!.future.timeout(const Duration(milliseconds: 600));
+      } catch (_) {
+        debugPrint('Live frame capture timed out, attempting fallback...');
+      } finally {
+        _frameCaptureCompleter = null;
+      }
+
+      if (bytes != null && bytes.isNotEmpty) {
+        final tempDir = await getTemporaryDirectory();
+        final file = File('${tempDir.path}/scan_${DateTime.now().millisecondsSinceEpoch}.jpg');
+        await file.writeAsBytes(bytes, flush: true);
+        imagePath = file.path;
+      } else {
+        // Fallback: take picture via controller if live stream was inactive
+        final ctrl = state.controller;
+        if (ctrl != null && ctrl.value.isInitialized) {
+          await pauseScanning();
+          await Future.delayed(const Duration(milliseconds: 150));
+          final XFile photo = await ctrl.takePicture();
+          bytes = await photo.readAsBytes();
+          imagePath = photo.path;
+        }
+      }
+
+      if (bytes == null || imagePath == null) {
         state = state.copyWith(
           phase: ScanPhase.error,
-          statusMessage: 'CAMERA UNAVAILABLE',
+          statusMessage: 'CAMERA CAPTURE ERROR',
         );
         _isBusy = false;
         return;
       }
 
-      final XFile photo = await ctrl.takePicture();
-      final bytes = await photo.readAsBytes();
-
       state = state.copyWith(
         phase: ScanPhase.barcodeProcessing,
         statusMessage: 'SCANNING BARCODE...',
         capturedImageBytes: bytes,
-        capturedImagePath: photo.path,
+        capturedImagePath: imagePath,
         captureProgress: 0.5,
       );
 
-      final barcodeValue = await _barcode.scanImage(photo.path);
+      final barcodeValue = await _barcode.scanImage(imagePath);
       debugPrint('MLKit Barcode value detected: "$barcodeValue"');
 
       if (barcodeValue != null && barcodeValue.isNotEmpty) {
