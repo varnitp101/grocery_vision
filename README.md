@@ -228,8 +228,3 @@ flutter run
 
 ---
 
-## 📖 Full Technical Manual
-
-For exhaustive details on data schemas, class definitions, and internal API contracts, see:
-
-👉 **[APP_DOCUMENTATION.md](file:///c:/Users/varni/Desktop/grocery_vision/APP_DOCUMENTATION.md)**
