@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../scanner/screens/scanner_screen.dart';
+import '../providers/mall_provider.dart';
+import '../widgets/mall_selector_gate_view.dart';
 import 'dashboard_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mallState = ref.watch(mallProvider);
+
+    // Step 1: If user hasn't selected their mall yet, show the Mall Selector first!
+    if (!mallState.isMallConfirmed) {
+      return const MallSelectorGateView();
+    }
+
+    // Step 2: After selecting mall, show the current home screen!
     final user = FirebaseAuth.instance.currentUser;
     final photoUrl = user?.photoURL;
     final displayName = user?.displayName ?? 'User';
@@ -20,11 +31,83 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: AppTheme.darkNavy,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Store Status Chip with Change Button
+              GestureDetector(
+                onTap: () {
+                  ref.read(mallProvider.notifier).resetMallSelection();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F2042),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppTheme.primaryAmber.withAlpha(140),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(40),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.storefront_rounded,
+                        color: AppTheme.primaryAmber,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'MALL: ${mallState.displayName.toUpperCase()}',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryAmber.withAlpha(35),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppTheme.primaryAmber.withAlpha(100)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'CHANGE',
+                              style: TextStyle(
+                                color: AppTheme.primaryAmber,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                            SizedBox(width: 2),
+                            Icon(Icons.sync_rounded, color: AppTheme.primaryAmber, size: 14),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
 
+              // System Ready Status & Profile
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -96,9 +179,9 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
 
-
+              // Tap to Scan Button
               Expanded(
                 flex: 3,
                 child: GestureDetector(
@@ -129,30 +212,30 @@ class HomeScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               _buildBlackIconBlock(Icons.auto_awesome),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: 14),
                               _buildBlackIconBlock(Icons.camera_alt, isLarge: true),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: 14),
                               _buildBlackIconBlock(Icons.search_rounded),
                             ],
                           ),
-                          const SizedBox(height: 40),
+                          const SizedBox(height: 24),
                           const Text(
                             'TAP TO\nSCAN\nPRODUCT',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: AppTheme.darkNavy,
-                              fontSize: 36,
+                              fontSize: 34,
                               fontWeight: FontWeight.w900,
-                              height: 1.2,
+                              height: 1.15,
                               letterSpacing: 1.0,
                             ),
                           ),
-                          const SizedBox(height: 40),
+                          const SizedBox(height: 20),
                           const Text(
                             'AI POWERED',
                             style: TextStyle(
                               color: AppTheme.darkNavy,
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 3.0,
                             ),
@@ -169,14 +252,13 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-
+              // Bottom Row: My Cart and History
               Expanded(
                 flex: 1,
                 child: Row(
                   children: [
-
                     Expanded(
                       child: Semantics(
                         label: 'Go to Cart',

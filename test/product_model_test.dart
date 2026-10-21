@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:grocery_vision/models/mall_catalog_item.dart';
 import 'package:grocery_vision/models/product_model.dart';
 
 void main() {
@@ -94,6 +95,36 @@ void main() {
       expect(restored.barcode, original.barcode);
       expect(restored.mrp, original.mrp);
       expect(restored.source, original.source);
+    });
+
+    test('MallCatalogItem.toProduct creates complete Product for scanning details screen', () {
+      const item = MallCatalogItem(
+        name: 'Britannia Good Day Butter Cookies',
+        category: 'Biscuits & Cookies',
+        weight: '600g',
+        mrp: 140.0,
+        dmartPrice: 104.0,
+        reliancePrice: 110.0,
+      );
+
+      final dmartProduct = item.toProduct(activeMall: 'DMart');
+      expect(dmartProduct.name, 'Britannia Good Day Butter Cookies');
+      expect(dmartProduct.brand, 'Britannia');
+      expect(dmartProduct.category, 'Biscuits & Cookies');
+      expect(dmartProduct.price, '104.0');
+      expect(dmartProduct.mrp, 140.0);
+      expect(dmartProduct.displayPrice, '₹140');
+      expect(dmartProduct.source, 'mall_catalog');
+      expect(dmartProduct.isFood, true);
+      expect(dmartProduct.nutritionInfo.containsKey('Calories'), true);
+      expect(dmartProduct.allergens, isNotEmpty);
+      expect(dmartProduct.honestTake, contains('DMart'));
+      expect(dmartProduct.honestTake, contains('₹104'));
+
+      final relianceProduct = item.toProduct(activeMall: 'Reliance Smart Bazaar');
+      expect(relianceProduct.price, '110.0');
+      expect(relianceProduct.mrp, 140.0);
+      expect(relianceProduct.honestTake, contains('Reliance Smart Bazaar'));
     });
   });
 }

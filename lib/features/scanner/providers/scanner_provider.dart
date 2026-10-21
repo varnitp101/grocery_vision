@@ -13,6 +13,8 @@ import '../../../services/haptic_service.dart';
 import '../../../services/local_history_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/yolo_service.dart';
+import '../../../services/mall_catalog_service.dart';
+import '../../dashboard/providers/mall_provider.dart';
 import '../../../utils/image_converter.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -465,26 +467,30 @@ class ScannerControllerNotifier extends StateNotifier<ScannerState> {
   Future<void> getDetailsFromWeb() => searchThroughOcr();
 
   Future<void> _onProductSuccessfullyIdentified(Product product) async {
+    final catalogService = _ref.read(mallCatalogServiceProvider);
+    final activeMall = _ref.read(mallProvider).displayName;
+    final calibratedProduct = catalogService.calibrateProductWithCsv(product, activeMall);
+
     await _haptic.productFound();
-    await _localHistory.saveScan(product);
-    _firestore.logScan(product);
+    await _localHistory.saveScan(calibratedProduct);
+    _firestore.logScan(calibratedProduct);
 
     state = state.copyWith(
       phase: ScanPhase.productFound,
       statusMessage: 'PRODUCT FOUND!',
-      scannedProduct: product,
+      scannedProduct: calibratedProduct,
       captureProgress: 1.0,
     );
 
-    final priceSpeech = product.mrp != null && product.mrp! > 0
-        ? 'Price ${product.mrp!.toStringAsFixed(product.mrp!.truncateToDouble() == product.mrp! ? 0 : 2)} rupees.'
-        : (product.price != null && product.price!.isNotEmpty ? 'Price ${product.price}.' : '');
-
-    final brandSpeech = product.brand.isNotEmpty && product.brand != 'Unknown Brand'
-        ? 'by ${product.brand}.'
+    final priceSpeech = calibratedProduct.displayPrice.isNotEmpty
+        ? 'Price ${calibratedProduct.displayPrice} in $activeMall.'
         : '';
 
-    final summary = '${product.name} $brandSpeech $priceSpeech Double tap Add to Cart or Scan Another.';
+    final brandSpeech = calibratedProduct.brand.isNotEmpty && calibratedProduct.brand != 'Unknown Brand'
+        ? 'by ${calibratedProduct.brand}.'
+        : '';
+
+    final summary = '${calibratedProduct.name} $brandSpeech $priceSpeech Double tap Add to Cart or Scan Another.';
     await _tts.speak(summary, priority: TtsPriority.immediate);
   }
 

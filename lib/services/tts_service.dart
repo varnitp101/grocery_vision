@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,15 +9,53 @@ enum TtsPriority {
   guidance,
 }
 
-class TtsService {
+class TtsService with WidgetsBindingObserver {
   static final FlutterTts _flutterTts = FlutterTts();
   static bool _isInitialized = false;
+  static bool _isAppForeground = true;
+  static bool _observerAdded = false;
   double _speechRate = 0.55;
   double _speechPitch = 1.0;
   final double _speechVolume = 1.0;
 
   TtsService() {
+    _ensureObserver();
     _init();
+  }
+
+  void _ensureObserver() {
+    if (!_observerAdded) {
+      try {
+        WidgetsBinding.instance.addObserver(this);
+        _observerAdded = true;
+      } catch (_) {}
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _isAppForeground = true;
+    } else if (state == AppLifecycleState.paused ||
+               state == AppLifecycleState.inactive ||
+               state == AppLifecycleState.hidden ||
+               state == AppLifecycleState.detached) {
+      _isAppForeground = false;
+      stop();
+    }
+  }
+
+  /// Check whether app is currently active in the foreground
+  static bool get isAppForeground => _isAppForeground;
+
+  /// Explicitly update foreground status if controlled by root app observer
+  static void setAppForeground(bool foreground) {
+    _isAppForeground = foreground;
+    if (!foreground) {
+      try {
+        _flutterTts.stop();
+      } catch (_) {}
+    }
   }
 
   Future<void> _init() async {
@@ -40,15 +79,19 @@ class TtsService {
 
   /// Speaks text with specified priority
   Future<void> speak(String text, {TtsPriority priority = TtsPriority.normal}) async {
+    if (!_isAppForeground) return;
     if (text.trim().isEmpty) return;
     await _init();
+    if (!_isAppForeground) return;
 
     if (priority == TtsPriority.immediate) {
       await _flutterTts.stop();
     }
 
     try {
-      await _flutterTts.speak(text);
+      if (_isAppForeground) {
+        await _flutterTts.speak(text);
+      }
     } catch (_) {
       // Ignored
     }

@@ -10,6 +10,8 @@ import 'features/onboarding/screens/onboarding_screen.dart';
 import 'features/dashboard/screens/dashboard_screen.dart';
 import 'services/gemini_service.dart';
 
+import 'services/tts_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -35,12 +37,42 @@ void main() async {
   );
 }
 
-class GroceryEyeApp extends ConsumerWidget {
+class GroceryEyeApp extends ConsumerStatefulWidget {
   final bool isLoggedIn;
   const GroceryEyeApp({super.key, required this.isLoggedIn});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GroceryEyeApp> createState() => _GroceryEyeAppState();
+}
+
+class _GroceryEyeAppState extends ConsumerState<GroceryEyeApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      TtsService.setAppForeground(true);
+    } else if (state == AppLifecycleState.paused ||
+               state == AppLifecycleState.inactive ||
+               state == AppLifecycleState.hidden ||
+               state == AppLifecycleState.detached) {
+      TtsService.setAppForeground(false);
+      ref.read(ttsServiceProvider).stop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeProvider);
 
     return MaterialApp(
@@ -49,7 +81,7 @@ class GroceryEyeApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
-      home: isLoggedIn ? const DashboardScreen() : const OnboardingScreen(),
+      home: widget.isLoggedIn ? const DashboardScreen() : const OnboardingScreen(),
     );
   }
 }

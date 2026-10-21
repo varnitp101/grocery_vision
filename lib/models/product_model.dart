@@ -212,6 +212,54 @@ class Product {
   Map<String, dynamic> toMap() => toFirestore();
 
   factory Product.fromMap(Map<String, dynamic> map) => Product.fromFirestore(map);
+
+  Product copyWith({
+    String? id,
+    String? name,
+    String? brand,
+    String? category,
+    String? imageUrl,
+    int? calories,
+    String? servingSize,
+    Map<String, String>? nutritionInfo,
+    String? ingredients,
+    List<String>? allergens,
+    String? size,
+    String? price,
+    bool? isFood,
+    String? honestTake,
+    String? barcode,
+    double? mrp,
+    String? source,
+    DateTime? timestamp,
+    String? shelfLife,
+    String? usageInstructions,
+    String? netQuantity,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      brand: brand ?? this.brand,
+      category: category ?? this.category,
+      imageUrl: imageUrl ?? this.imageUrl,
+      calories: calories ?? this.calories,
+      servingSize: servingSize ?? this.servingSize,
+      nutritionInfo: nutritionInfo ?? this.nutritionInfo,
+      ingredients: ingredients ?? this.ingredients,
+      allergens: allergens ?? this.allergens,
+      size: size ?? this.size,
+      price: price ?? this.price,
+      isFood: isFood ?? this.isFood,
+      honestTake: honestTake ?? this.honestTake,
+      barcode: barcode ?? this.barcode,
+      mrp: mrp ?? this.mrp,
+      source: source ?? this.source,
+      timestamp: timestamp ?? this.timestamp,
+      shelfLife: shelfLife ?? this.shelfLife,
+      usageInstructions: usageInstructions ?? this.usageInstructions,
+      netQuantity: netQuantity ?? this.netQuantity,
+    );
+  }
 }
 
 class _DefaultDateTime implements DateTime {

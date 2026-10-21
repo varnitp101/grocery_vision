@@ -2,11 +2,14 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/product_model.dart';
+import '../../../services/mall_catalog_service.dart';
 import '../../../services/tts_service.dart';
 import '../../cart/providers/cart_provider.dart';
 import '../../cart/screens/added_to_cart_screen.dart';
+import '../../dashboard/providers/mall_provider.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
 import 'product_details_screen.dart';
+import 'similar_products_screen.dart';
 
 class ProductResultScreen extends ConsumerStatefulWidget {
   final Product product;
@@ -26,16 +29,23 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
   @override
   void initState() {
     super.initState();
-    _announceResult();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _announceResult();
+      }
+    });
   }
 
   Future<void> _announceResult() async {
+    if (!mounted) return;
     final tts = ref.read(ttsServiceProvider);
-    final String pricePart = widget.product.mrp != null && widget.product.mrp! > 0
-        ? 'Price ${widget.product.mrp!.toStringAsFixed(widget.product.mrp!.truncateToDouble() == widget.product.mrp! ? 0 : 2)} rupees.'
-        : (widget.product.price != null && widget.product.price!.isNotEmpty
-            ? 'Price ${widget.product.price}.'
-            : '');
+    final activeMall = ref.read(mallProvider).displayName;
+    final catalogService = ref.read(mallCatalogServiceProvider);
+    final mallPrice = catalogService.getPriceForProductInMall(widget.product, activeMall);
+
+    final String pricePart = mallPrice.isNotEmpty
+        ? 'Price $mallPrice in $activeMall.'
+        : '';
 
     final String brandPart =
         widget.product.brand.isNotEmpty && widget.product.brand != 'Unknown Brand'
@@ -44,14 +54,17 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
 
     final String announcement =
         'Result found: ${widget.product.name}. $brandPart $pricePart Category: ${widget.product.category}. '
-        'Add to cart, details, repeat info, and scan next options available.';
+        'Add to cart, details, similar products in $activeMall, repeat info, and scan next options available.';
 
+    if (!mounted) return;
     await tts.speak(announcement, priority: TtsPriority.immediate);
   }
 
   @override
   void dispose() {
-    ref.read(ttsServiceProvider).stop();
+    try {
+      ref.read(ttsServiceProvider).stop();
+    } catch (_) {}
     super.dispose();
   }
 
@@ -61,6 +74,17 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
     const navyCard = Color(0xFF132F4C);
     const primaryAmber = Color(0xFFFFBF00);
     final isBarcode = widget.product.source == 'barcode';
+    final mallState = ref.watch(mallProvider);
+    final activeMallName = mallState.displayName;
+    final catalogService = ref.watch(mallCatalogServiceProvider);
+    final category = catalogService.detectCategory(widget.product);
+    final similarCount = catalogService.getSimilarProductsCount(
+      widget.product,
+      categoryFilter: category,
+      mallName: activeMallName,
+    );
+    final mallPrice = catalogService.getPriceForProductInMall(widget.product, activeMallName);
+    final exactCatalogItem = catalogService.findExactCatalogItem(widget.product.name);
 
     return Scaffold(
       backgroundColor: navyDeep,
@@ -167,11 +191,35 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                                           )
                                         : Container(
                                             color: navyDeep.withAlpha(100),
-                                            child: const Center(
-                                              child: Icon(
-                                                Icons.camera_alt_rounded,
-                                                size: 80,
-                                                color: Colors.white24,
+                                            child: Center(
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    _getCategoryPlaceholderIcon(widget.product.category),
+                                                    size: 72,
+                                                    color: primaryAmber.withAlpha(200),
+                                                  ),
+                                                  const SizedBox(height: 10),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white.withAlpha(15),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Text(
+                                                      widget.product.source == 'mall_catalog'
+                                                          ? '$activeMallName STORE ITEM'
+                                                          : 'PRODUCT IMAGE',
+                                                      style: const TextStyle(
+                                                        color: Colors.white70,
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.bold,
+                                                        letterSpacing: 1.0,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ),
@@ -204,9 +252,12 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                                 ),
                                 const SizedBox(height: 8),
 
-                                // Price and Category Row
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                // Price and Category Row (Wrap to avoid layout overflow)
+                                Wrap(
+                                  alignment: WrapAlignment.center,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 8,
+                                  runSpacing: 6,
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.symmetric(
@@ -219,7 +270,7 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                                         border: Border.all(color: primaryAmber.withAlpha(120)),
                                       ),
                                       child: Text(
-                                        widget.product.displayPrice,
+                                        mallPrice.isNotEmpty ? mallPrice : widget.product.displayPrice,
                                         style: const TextStyle(
                                           color: primaryAmber,
                                           fontSize: 18,
@@ -228,7 +279,27 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
+                                    if (exactCatalogItem != null && exactCatalogItem.mrp > 0)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withAlpha(15),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.white.withAlpha(30)),
+                                        ),
+                                        child: Text(
+                                          'MRP: ${exactCatalogItem.formattedMrp}',
+                                          style: const TextStyle(
+                                            color: Colors.white60,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            decoration: TextDecoration.lineThrough,
+                                          ),
+                                        ),
+                                      ),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 10,
@@ -250,8 +321,7 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                                       ),
                                     ),
                                     if (widget.product.size != null &&
-                                        widget.product.size!.isNotEmpty) ...[
-                                      const SizedBox(width: 8),
+                                        widget.product.size!.isNotEmpty)
                                       Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 10,
@@ -271,7 +341,6 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                                           ),
                                         ),
                                       ),
-                                    ],
                                   ],
                                 ),
                               ],
@@ -289,27 +358,47 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                           decoration: BoxDecoration(
                             color: isBarcode
                                 ? Colors.green.withAlpha(50)
-                                : Colors.cyan.withAlpha(50),
+                                : widget.product.source == 'mall_catalog'
+                                    ? primaryAmber.withAlpha(50)
+                                    : Colors.cyan.withAlpha(50),
                             borderRadius: BorderRadius.circular(999),
                             border: Border.all(
                               color: isBarcode
                                   ? Colors.greenAccent.withAlpha(150)
-                                  : Colors.cyanAccent.withAlpha(150),
+                                  : widget.product.source == 'mall_catalog'
+                                      ? primaryAmber.withAlpha(180)
+                                      : Colors.cyanAccent.withAlpha(150),
                             ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                isBarcode ? Icons.qr_code_scanner : Icons.auto_awesome,
-                                color: isBarcode ? Colors.greenAccent : Colors.cyanAccent,
+                                isBarcode
+                                    ? Icons.qr_code_scanner
+                                    : widget.product.source == 'mall_catalog'
+                                        ? Icons.storefront_rounded
+                                        : Icons.auto_awesome,
+                                color: isBarcode
+                                    ? Colors.greenAccent
+                                    : widget.product.source == 'mall_catalog'
+                                        ? primaryAmber
+                                        : Colors.cyanAccent,
                                 size: 14,
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                isBarcode ? 'BARCODE VERIFIED' : 'AI VISUAL SEARCH',
+                                isBarcode
+                                    ? 'BARCODE VERIFIED'
+                                    : widget.product.source == 'mall_catalog'
+                                        ? '$activeMallName CATALOG'
+                                        : 'AI VISUAL SEARCH',
                                 style: TextStyle(
-                                  color: isBarcode ? Colors.greenAccent : Colors.cyanAccent,
+                                  color: isBarcode
+                                      ? Colors.greenAccent
+                                      : widget.product.source == 'mall_catalog'
+                                          ? primaryAmber
+                                          : Colors.cyanAccent,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.5,
@@ -339,10 +428,11 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                           borderColor: Colors.white.withAlpha(50),
                           onTap: () {
                             ref.read(ttsServiceProvider).stop();
-                            ref.read(cartProvider.notifier).addProduct(widget.product);
+                            final calibrated = catalogService.calibrateProductWithCsv(widget.product, activeMallName);
+                            ref.read(cartProvider.notifier).addProduct(calibrated);
                             Navigator.of(context).pushReplacement(
                               MaterialPageRoute(
-                                builder: (_) => AddedToCartScreen(product: widget.product),
+                                builder: (_) => AddedToCartScreen(product: calibrated),
                               ),
                             );
                           },
@@ -370,6 +460,145 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Similar Products in Mall Button (Directly below Details button)
+                  Semantics(
+                    label: widget.product.source == 'mall_catalog'
+                        ? 'Back to similar products list in $activeMallName'
+                        : similarCount > 0
+                            ? 'Suggest similar $category in $activeMallName ($similarCount options available)'
+                            : 'No other $category currently in $activeMallName',
+                    button: true,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        ref.read(ttsServiceProvider).stop();
+                        if (widget.product.source == 'mall_catalog') {
+                          Navigator.of(context).pop();
+                        } else {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => SimilarProductsScreen(
+                                scannedProduct: widget.product,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF153356), Color(0xFF1B406B)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: primaryAmber.withAlpha(160),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryAmber.withAlpha(30),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: primaryAmber.withAlpha(30),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: primaryAmber.withAlpha(120),
+                                ),
+                              ),
+                              child: Icon(
+                                widget.product.source == 'mall_catalog'
+                                    ? Icons.arrow_back_rounded
+                                    : Icons.storefront_rounded,
+                                color: primaryAmber,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          widget.product.source == 'mall_catalog'
+                                              ? 'BACK TO SIMILAR PRODUCTS'
+                                              : 'SIMILAR IN ${activeMallName.toUpperCase()}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: primaryAmber,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 1.1,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: primaryAmber,
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          widget.product.source == 'mall_catalog'
+                                              ? 'RETURN'
+                                              : '$similarCount OPTIONS',
+                                          style: const TextStyle(
+                                            color: navyDeep,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    widget.product.source == 'mall_catalog'
+                                        ? 'Return to other $category options in $activeMallName'
+                                        : similarCount > 0
+                                            ? 'Suggest other ${category.toLowerCase()} in $activeMallName'
+                                            : 'No other ${category.toLowerCase()} in $activeMallName',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              widget.product.source == 'mall_catalog'
+                                  ? Icons.list_rounded
+                                  : Icons.arrow_forward_ios_rounded,
+                              color: primaryAmber,
+                              size: 16,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -408,6 +637,20 @@ class _ProductResultScreenState extends ConsumerState<ProductResultScreen> {
         ),
       ),
     );
+  }
+
+  IconData _getCategoryPlaceholderIcon(String category) {
+    final lower = category.toLowerCase();
+    if (lower.contains('biscuit') || lower.contains('cookie') || lower.contains('snack')) {
+      return Icons.cookie_rounded;
+    }
+    if (lower.contains('tea') || lower.contains('coffee') || lower.contains('beverage')) {
+      return Icons.local_cafe_rounded;
+    }
+    if (lower.contains('shampoo') || lower.contains('personal') || lower.contains('hair') || lower.contains('soap')) {
+      return Icons.shower_rounded;
+    }
+    return Icons.shopping_bag_outlined;
   }
 }
 
